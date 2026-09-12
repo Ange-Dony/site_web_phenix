@@ -68,13 +68,13 @@ export default function CataloguePage() {
       {/* Header */}
       <div className="border-b border-slate-200 pb-6">
         <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-amber-700 mb-1">
-          <BookOpen className="w-4 h-4" /> Catalogue Complet
+          <BookOpen className="w-4 h-4" /> Catalogue Officiel — La Maison du Succès
         </div>
         <h1 className="text-3xl sm:text-4xl font-serif font-black text-slate-900">
-          Nos Ouvrages & Collections d'Édition
+          Nos Activités d'Évaluation, Annales & Guides
         </h1>
         <p className="text-sm text-slate-600 max-w-3xl mt-1">
-          Explorez l'ensemble des titres édités par les Éditions Phénix : manuels scolaires officiels, guides méthodologiques, annales d'examens et romans.
+          Explorez l'ensemble des titres édités par <strong>Les Éditions Phénix</strong> : cahiers d'activités d'évaluation, guides méthodologiques, annales d'examens (BEPC, BAC) et œuvres littéraires.
         </p>
       </div>
 

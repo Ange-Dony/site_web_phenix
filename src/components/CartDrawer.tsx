@@ -57,7 +57,7 @@ export default function CartDrawer() {
                   Votre panier est vide
                 </h3>
                 <p className="text-sm text-slate-500 max-w-xs mb-6">
-                  Découvrez notre catalogue de manuels, annales d'examens et œuvres littéraires.
+                  Découvrez notre catalogue d'activités d'évaluation, annales d'examens, guides et œuvres littéraires.
                 </p>
                 <button
                   onClick={() => setIsCartOpen(false)}

@@ -53,15 +53,15 @@ export default function HomePage() {
             <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-semibold tracking-wide">
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <span>Maison d'Édition Agréée — Réussite Scolaire & Littérature</span>
+                <span>Les Éditions Phénix — La Maison du Succès</span>
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-black tracking-tight leading-[1.15] text-white">
-                L'Excellence du Livre au Service de votre <span className="bg-gradient-to-r from-amber-400 via-amber-200 to-amber-400 bg-clip-text text-transparent">Réussite</span>.
+                La Maison du Succès pour vos Examens et <span className="bg-gradient-to-r from-amber-400 via-amber-200 to-amber-400 bg-clip-text text-transparent">Évaluations</span>.
               </h1>
 
               <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-normal">
-                Découvrez les manuels scolaires officiels, annales méthodologiques (BEPC, BAC) et œuvres littéraires des <strong>Éditions Phénix</strong>. Téléchargez gratuitement les corrigés types et commandez vos ouvrages en direct via WhatsApp.
+                Découvrez les cahiers d'activités d'évaluation, annales méthodologiques (BEPC, BAC), guides pratiques et créations littéraires de <strong>Les Éditions Phénix</strong>. Téléchargez gratuitement les corrigés types et commandez vos ouvrages en direct via WhatsApp.
               </p>
 
               {/* CTAs */}
@@ -98,7 +98,7 @@ export default function HomePage() {
               <div className="pt-6 border-t border-slate-800/80 grid grid-cols-3 gap-4 text-xs text-slate-400">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>Programmes officiels</span>
+                  <span>Évaluations ciblées</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -332,7 +332,7 @@ export default function HomePage() {
               Choisissez vos Livres
             </h3>
             <p className="text-sm text-slate-600 leading-relaxed">
-              Parcourez le catalogue et ajoutez les manuels ou annales souhaités à votre panier en définissant les quantités.
+              Parcourez le catalogue et ajoutez les annales, cahiers d'activités d'évaluation ou guides souhaités à votre panier.
             </p>
           </div>
 

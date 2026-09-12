@@ -41,7 +41,7 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>Éditions Phénix — Manuels, Annales et Corrigés Pédagogiques Officiels</span>
+            <span>Les Éditions Phénix — La Maison du Succès | Évaluations, Annales & Corrigés Officiels</span>
           </div>
           <div className="flex items-center gap-4 hidden sm:flex">
             <a 
@@ -70,15 +70,19 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-20">
           {/* Brand Logo */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-700 via-amber-600 to-red-600 flex items-center justify-center text-white shadow-md shadow-amber-900/20 group-hover:scale-105 transition-transform">
-              <BookOpen className="w-6 h-6 stroke-[2.2]" />
+            <div className="w-13 h-13 rounded-xl overflow-hidden bg-white flex items-center justify-center p-0.5 shadow-sm border border-slate-200/80 group-hover:scale-105 transition-transform">
+              <img
+                src="/logo.png"
+                alt="Les Éditions Phénix - La Maison du Succès"
+                className="w-full h-full object-contain"
+              />
             </div>
             <div className="flex flex-col">
               <span className="text-xl sm:text-2xl font-serif font-black tracking-tight text-slate-900 group-hover:text-amber-700 transition-colors">
-                ÉDITIONS PHÉNIX
+                LES ÉDITIONS PHÉNIX
               </span>
-              <span className="text-[11px] font-medium tracking-wider uppercase text-amber-700">
-                L'Excellence Pédagogique
+              <span className="text-[11px] font-bold tracking-wider uppercase text-amber-700">
+                La Maison du Succès
               </span>
             </div>
           </Link>

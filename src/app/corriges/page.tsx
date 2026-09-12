@@ -84,7 +84,7 @@ export default function CorrigesPage() {
             Espace de Téléchargement des Corrigés Officiels
           </h1>
           <p className="text-sm sm:text-base text-emerald-100/90 leading-relaxed">
-            Retrouvez les corrigés modèles, fiches d'évaluation et solutions rédigées pour les manuels et annales d'examens des <strong>Éditions Phénix</strong>. Disponibles en formats <strong>PDF</strong> et <strong>Word (.docx)</strong>.
+            Retrouvez les corrigés modèles, fiches d'évaluation et solutions rédigées pour les activités d'évaluation, annales et guides de <strong>Les Éditions Phénix</strong> — <em>La Maison du Succès</em>. Disponibles gratuitement en formats <strong>PDF</strong> et <strong>Word (.docx)</strong>.
           </p>
         </div>
       </div>

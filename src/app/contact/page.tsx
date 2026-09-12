@@ -13,7 +13,7 @@ export default function ContactPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const text = encodeURIComponent(
-      `Bonjour les Éditions Phénix !\n\n` +
+      `Bonjour Les Éditions Phénix - La Maison du Succès !\n\n` +
       `👤 Nom : ${name}\n` +
       `📞 Téléphone : ${phone}\n` +
       `📌 Objet : ${subject}\n\n` +
@@ -27,10 +27,10 @@ export default function ContactPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
       <div className="text-center max-w-2xl mx-auto space-y-3">
         <h1 className="text-3xl sm:text-4xl font-serif font-black text-slate-900">
-          Contactez les Éditions Phénix
+          Contactez Les Éditions Phénix
         </h1>
         <p className="text-sm text-slate-600">
-          Une question sur nos manuels, besoin d'un devis pour un établissement scolaire ou envie de soumettre un manuscrit ? Notre équipe vous répond avec plaisir.
+          Une question sur nos activités d'évaluation, annales ou guides ? Besoin d'un devis pour un établissement scolaire ou envie de soumettre un manuscrit ? Notre équipe vous répond avec plaisir.
         </p>
       </div>
 

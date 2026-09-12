@@ -12,15 +12,24 @@ export default function Footer() {
           {/* Brand Info */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-600 to-red-600 flex items-center justify-center text-white shadow-lg">
-                <BookOpen className="w-5 h-5" />
+              <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-1 shadow-md shrink-0">
+                <img
+                  src="/logo.png"
+                  alt="Les Éditions Phénix - La Maison du Succès"
+                  className="w-full h-full object-contain"
+                />
               </div>
-              <span className="text-xl font-serif font-black tracking-tight text-white">
-                ÉDITIONS PHÉNIX
-              </span>
+              <div className="flex flex-col">
+                <span className="text-lg font-serif font-black tracking-tight text-white leading-tight">
+                  LES ÉDITIONS PHÉNIX
+                </span>
+                <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider">
+                  La Maison du Succès
+                </span>
+              </div>
             </div>
             <p className="text-sm text-slate-400 leading-relaxed">
-              Maison d'édition engagée pour l'excellence pédagogique, la réussite scolaire aux examens nationaux (BEPC, BAC) et le rayonnement des belles lettres africaines.
+              Maison d'édition de référence dédiée à la réussite scolaire aux examens nationaux (BEPC, BAC) à travers des activités d'évaluation, annales méthodologiques, guides pédagogiques et créations littéraires.
             </p>
             <div className="pt-2">
               <a
@@ -48,12 +57,12 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/catalogue?collection=Collection+Archives" className="hover:text-white hover:underline transition-colors">
-                  Collection Archives (Histoire-Géographie)
+                  Collection Archives (Activités d'Évaluation Histoire-Géo)
                 </Link>
               </li>
               <li>
                 <Link href="/catalogue?collection=Collection+Polyglotte" className="hover:text-white hover:underline transition-colors">
-                  Collection Polyglotte (Anglais & Oral)
+                  Collection Polyglotte (Guides d'Anglais)
                 </Link>
               </li>
               <li>
@@ -136,9 +145,9 @@ export default function Footer() {
 
         {/* Bottom Credits */}
         <div className="pt-8 mt-8 border-t border-slate-900 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-4">
-          <p>© {new Date().getFullYear()} Éditions Phénix. Tous droits réservés.</p>
+          <p>© {new Date().getFullYear()} Les Éditions Phénix - La Maison du Succès. Tous droits réservés.</p>
           <p className="flex items-center gap-1">
-            <span>Conçu avec excellence pour les Éditions Phénix</span>
+            <span>Conçu avec excellence pour Les Éditions Phénix</span>
           </p>
         </div>
       </div>

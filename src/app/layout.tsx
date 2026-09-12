@@ -6,12 +6,12 @@ import CartDrawer from '@/components/CartDrawer';
 import { CartProvider } from '@/lib/cart-context';
 
 export const metadata: Metadata = {
-  title: "Éditions Phénix | Manuels Scolaires, Annales & Corrigés Pédagogiques",
-  description: "Découvrez le catalogue des Éditions Phénix : annales de BEPC et BAC, Histoire-Géographie, Anglais, Philosophie, œuvres littéraires, téléchargement de corrigés officiels gratuits et commande directe via WhatsApp.",
-  keywords: ["Éditions Phénix", "manuels scolaires", "corrigés BEPC", "corrigés BAC", "Histoire-Géographie", "annales", "Côte d'Ivoire", "livres scolaires", "WhatsApp"],
+  title: "Les Éditions Phénix | La Maison du Succès — Activités d'Évaluation, Annales & Corrigés",
+  description: "Découvrez Les Éditions Phénix - La Maison du Succès : annales de BEPC et BAC, cahiers d'activités d'évaluation en Histoire-Géographie, guides d'Anglais et de Philosophie, téléchargement de corrigés officiels gratuits et commande directe via WhatsApp.",
+  keywords: ["Les Éditions Phénix", "La Maison du Succès", "activités d'évaluation", "annales BEPC", "annales BAC", "Histoire-Géographie", "corrigés officiels", "Côte d'Ivoire", "WhatsApp"],
   openGraph: {
-    title: "Éditions Phénix | L'Excellence Pédagogique",
-    description: "Téléchargez des corrigés officiels et commandez vos manuels scolaires en direct via WhatsApp.",
+    title: "Les Éditions Phénix | La Maison du Succès",
+    description: "Téléchargez des corrigés officiels et commandez vos ouvrages (activités d'évaluation, annales, guides) en direct via WhatsApp.",
     type: "website",
     locale: "fr_FR",
   },

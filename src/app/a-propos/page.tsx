@@ -9,13 +9,13 @@ export default function AProposPage() {
       <div className="text-center max-w-3xl mx-auto space-y-4">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-100 text-amber-900 text-xs font-bold">
           <BookOpen className="w-3.5 h-3.5" />
-          <span>Notre Histoire & Notre Vocation</span>
+          <span>Les Éditions Phénix — La Maison du Succès</span>
         </div>
         <h1 className="text-3xl sm:text-5xl font-serif font-black text-slate-900 leading-tight">
-          Bâtir l'Avenir par le Livre et l'Excellence du Savoir
+          La Maison du Succès : Élever le Savoir et Réussir les Examens
         </h1>
         <p className="text-base text-slate-600 leading-relaxed">
-          Fondées avec la passion inaltérable de transmettre, les <strong>Éditions Phénix</strong> œuvrent chaque jour aux côtés de la communauté éducative, des enseignants, des élèves et des passionnés de littérature.
+          Fondée avec la passion d'instruire et d'élever, <strong>Les Éditions Phénix</strong> conçoivent des outils d'apprentissage pragmatiques : cahiers d'activités d'évaluation, annales d'examens, guides méthodologiques et créations littéraires pour les élèves, enseignants et passionnés de lettres.
         </p>
       </div>
 
@@ -25,9 +25,9 @@ export default function AProposPage() {
           <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center mb-4">
             <GraduationCap className="w-6 h-6" />
           </div>
-          <h3 className="text-lg font-bold text-slate-900">Rigueur & Programmes Officiels</h3>
+          <h3 className="text-lg font-bold text-slate-900">Évaluation Continue & Rigueur</h3>
           <p className="text-sm text-slate-600 leading-relaxed">
-            Chaque manuel et annale est élaboré en étroite concertation avec des inspecteurs généraux et des professeurs chevronnés, garantissant une parfaite conformité avec les programmes éducatifs en vigueur.
+            Chaque cahier d'activités d'évaluation et annale est conçu par des professeurs chevronnés et inspecteurs, garantissant un entraînement intensif et une parfaite conformité avec les programmes éducatifs officiels.
           </p>
         </div>
 
@@ -35,9 +35,9 @@ export default function AProposPage() {
           <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center mb-4">
             <Award className="w-6 h-6" />
           </div>
-          <h3 className="text-lg font-bold text-slate-900">Corrigés & Pédagogie Ouverte</h3>
+          <h3 className="text-lg font-bold text-slate-900">Corrigés Détaillés & Pédagogie Ouverte</h3>
           <p className="text-sm text-slate-600 leading-relaxed">
-            Nous croyons qu'un bon manuel doit être accompagné d'outils d'évaluation fiables. C'est pourquoi nous mettons à disposition des corrigés types et détaillés en téléchargement libre.
+            Pour assurer l'autonomie et l'auto-évaluation des élèves, nous mettons à disposition les corrigés officiels rédigés de nos ouvrages en libre téléchargement (PDF et Word).
           </p>
         </div>
 
@@ -45,9 +45,9 @@ export default function AProposPage() {
           <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-800 flex items-center justify-center mb-4">
             <Users className="w-6 h-6" />
           </div>
-          <h3 className="text-lg font-bold text-slate-900">Promotion des Auteurs</h3>
+          <h3 className="text-lg font-bold text-slate-900">Guides & Créations Littéraires</h3>
           <p className="text-sm text-slate-600 leading-relaxed">
-            Au-delà des matières scolaires, nous valorisons la création littéraire contemporaine à travers des récits, romans et poésies qui éveillent l'imaginaire et la sensibilité de la jeunesse.
+            Au-delà des matières d'examen, nous valorisons la créativité et l'éloquence à travers des guides de prise de parole, d'expression écrite et des œuvres littéraires captivantes.
           </p>
         </div>
       </div>
@@ -57,7 +57,7 @@ export default function AProposPage() {
         <div className="space-y-2 max-w-xl text-center md:text-left">
           <h2 className="text-2xl font-serif font-bold">Vous êtes enseignant ou auteur ?</h2>
           <p className="text-sm text-amber-200">
-            Rejoignez notre comité de relecture ou soumettez-nous votre projet de manuel ou d'œuvre littéraire.
+            Rejoignez notre comité pédagogique ou soumettez-nous votre projet d'annale, guide pratique ou œuvre littéraire.
           </p>
         </div>
         <Link

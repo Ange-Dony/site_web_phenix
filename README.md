@@ -1,13 +1,13 @@
-# 📚 Site Web des Éditions Phénix
+# 📚 Site Web : Les Éditions Phénix — La Maison du Succès
 
-Site web moderne, rapide et optimisé SEO pour la maison d'édition **Éditions Phénix**, conçu avec **Next.js 15**, **Supabase** et hébergeable gratuitement sur **Vercel** sans dépenser un seul centime (0 €).
+Site web moderne, rapide et optimisé SEO pour la maison d'édition **Les Éditions Phénix** (*La Maison du Succès*), conçu avec **Next.js 15**, **Supabase** et hébergeable gratuitement sur **Vercel** sans dépenser un seul centime (0 €).
 
 ---
 
 ## 🎯 Fonctionnalités Principales
 
 1. **Vitrine & Catalogue Complet des Ouvrages**
-   - Présentation des 6 collections phares : *Collection Succès (Annales & Examens)*, *Collection Archives (Histoire-Géographie)*, *Collection Polyglotte (Anglais)*, *Collection Papyrus (Littérature & Romans)*, *Collection École & Métiers (CMC)*, *Collection Racines (Français)*.
+   - Présentation des 6 collections phares : *Collection Succès (Annales & Examens)*, *Collection Archives (Cahiers d'Activités & Évaluation Histoire-Géographie)*, *Collection Polyglotte (Guides d'Anglais)*, *Collection Papyrus (Littérature & Romans)*, *Collection École & Métiers (CMC)*, *Collection Racines (Français & Dictée-Questions)*.
    - Filtres interactifs instantanés par collection, matière, niveau (6e, 5e, 4e, 3e BEPC, 2nde, 1ère, Terminale BAC) et tri par prix.
    - Fiches détaillées par livre avec aperçu de couverture, pagination, ISBN et description pédagogique.
 

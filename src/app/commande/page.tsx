@@ -37,7 +37,8 @@ export default function CommandePage() {
   const sellerWhatsApp = '2250700000000';
 
   const generateOrderMessage = (orderCode: string) => {
-    let msg = `🌟 *NOUVELLE COMMANDE - ÉDITIONS PHÉNIX*\n`;
+    let msg = `🌟 *NOUVELLE COMMANDE - LES ÉDITIONS PHÉNIX*\n`;
+    msg += `🏆 *La Maison du Succès*\n`;
     msg += `🔖 *Réf. Commande :* ${orderCode}\n\n`;
     msg += `👤 *INFORMATIONS DU CLIENT :*\n`;
     msg += `• *Nom :* ${customerName.trim()}\n`;
@@ -169,7 +170,7 @@ export default function CommandePage() {
           Votre Panier est Actuellement Vide
         </h1>
         <p className="text-sm text-slate-500 max-w-sm mx-auto">
-          Vous n'avez pas encore sélectionné de manuels scolaires ou d'annales d'examen à commander.
+          Vous n'avez pas encore sélectionné d'annales d'examen, d'activités d'évaluation ou de guides à commander.
         </p>
         <div className="pt-4">
           <Link
