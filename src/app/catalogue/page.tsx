@@ -22,13 +22,33 @@ export default function CataloguePage() {
 
   const collections = [
     { id: 'all', name: 'Toutes les collections' },
-    { id: 'Collection Succès', name: 'Collection Succès (Annales)' },
     { id: 'Collection Archives', name: 'Collection Archives (Histoire-Géo)' },
+    { id: 'Collection École et Métiers', name: 'Collection École et Métiers (CMC)' },
+    { id: 'Collection Jeune Citoyen', name: 'Collection Jeune Citoyen (EDHC)' },
+    { id: 'Collection Succès', name: 'Collection Succès (Annales)' },
     { id: 'Collection Polyglotte', name: 'Collection Polyglotte (Anglais)' },
-    { id: 'Collection Papyrus', name: 'Collection Papyrus (Littérature)' },
-    { id: 'Collection École et Métiers', name: 'École & Métiers (CMC)' },
     { id: 'Collection Racines', name: 'Collection Racines (Français)' },
+    { id: 'Collection Papyrus', name: 'Collection Papyrus (Littérature)' },
   ];
+
+  // Ordre hiérarchique strict des collections demandé par l'utilisateur
+  const COLLECTION_ORDER = [
+    'Collection Archives',
+    'Collection École et Métiers',
+    'Collection Jeune Citoyen',
+    'Collection Succès',
+    'Collection Polyglotte',
+    'Collection Racines',
+    'Collection Papyrus',
+  ];
+
+  const getCollectionRank = (colName?: string) => {
+    if (!colName) return 999;
+    const idx = COLLECTION_ORDER.findIndex(
+      (c) => c.toLowerCase() === colName.toLowerCase() || colName.toLowerCase().includes(c.toLowerCase())
+    );
+    return idx !== -1 ? idx : 999;
+  };
 
   const levels = [
     { id: 'all', name: 'Tous les niveaux' },
@@ -59,9 +79,14 @@ export default function CataloguePage() {
       if (sortBy === 'price-asc') return a.price - b.price;
       if (sortBy === 'price-desc') return b.price - a.price;
       if (sortBy === 'title') return a.title.localeCompare(b.title);
-      return 0;
+      // Par défaut, tri selon l'ordre strict des collections :
+      // Archives → École et Métiers → Jeune Citoyen → Succès → Polyglotte → Racines → Papyrus
+      const rankA = getCollectionRank(a.collection);
+      const rankB = getCollectionRank(b.collection);
+      if (rankA !== rankB) return rankA - rankB;
+      return a.title.localeCompare(b.title);
     });
-  }, [searchTerm, selectedCollection, selectedLevel, sortBy]);
+  }, [books, searchTerm, selectedCollection, selectedLevel, sortBy]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">

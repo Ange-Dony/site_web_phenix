@@ -436,6 +436,25 @@ export const INITIAL_BOOKS: Book[] = [
     published_year: 2024,
     is_featured: false,
     in_stock: true,
+  },
+  // Collection Jeune Citoyen (EDHC & Civisme)
+  {
+    id: 'b24',
+    title: 'Éducation aux Droits de l\'Homme et Citoyenneté (EDHC) - Guide du Jeune Citoyen',
+    slug: 'edhc-guide-jeune-citoyen',
+    author: 'Comité Éthique & Civisme Phénix',
+    category: 'Civisme & EDHC',
+    collection: 'Collection Jeune Citoyen',
+    level: 'Collège & Lycée',
+    description: 'Manuel pratique d\'initiation aux droits humains, à la paix, au respect des institutions républicaines et à la citoyenneté responsable.',
+    price: 3500,
+    old_price: 4000,
+    cover_url: '/covers/code-d-acces-annale-hg-3e.png',
+    isbn: '978-2-3849-060-8',
+    page_count: 144,
+    published_year: 2025,
+    is_featured: true,
+    in_stock: true,
   }
 ];
 
@@ -543,39 +562,45 @@ export const INITIAL_CORRIGES: Corrige[] = [
 export const INITIAL_COLLECTIONS: CollectionItem[] = [
   {
     id: 'col-1',
-    name: 'Collection Succès',
-    description: 'Annales officielles et méthodologies intensives pour examens (BEPC & BAC)',
-    color: 'from-amber-600 to-amber-800',
-  },
-  {
-    id: 'col-2',
     name: 'Collection Archives',
     description: 'Cahiers d\'activités d\'évaluation et situations d\'apprentissage (Histoire-Géo)',
     color: 'from-blue-600 to-blue-800',
   },
   {
-    id: 'col-3',
-    name: 'Collection Polyglotte',
-    description: 'Guides d\'apprentissage des langues vivantes et compétences orales (Anglais)',
-    color: 'from-emerald-600 to-emerald-800',
-  },
-  {
-    id: 'col-4',
-    name: 'Collection Papyrus',
-    description: 'Romans, poésie et créations littéraires ivoiriennes et africaines',
-    color: 'from-purple-600 to-purple-800',
-  },
-  {
-    id: 'col-5',
+    id: 'col-2',
     name: 'Collection École et Métiers',
     description: 'Filières professionnelles tertiaires et Communication & Méthodes Commerciales (CMC)',
     color: 'from-teal-600 to-teal-800',
   },
   {
+    id: 'col-3',
+    name: 'Collection Jeune Citoyen',
+    description: 'Éducation aux Droits de l\'Homme, Citoyenneté (EDHC), civisme et paix',
+    color: 'from-amber-500 to-orange-700',
+  },
+  {
+    id: 'col-4',
+    name: 'Collection Succès',
+    description: 'Annales officielles et méthodologies intensives pour examens (BEPC & BAC)',
+    color: 'from-amber-600 to-amber-800',
+  },
+  {
+    id: 'col-5',
+    name: 'Collection Polyglotte',
+    description: 'Guides d\'apprentissage des langues vivantes et compétences orales (Anglais)',
+    color: 'from-emerald-600 to-emerald-800',
+  },
+  {
     id: 'col-6',
     name: 'Collection Racines',
-    description: 'Patrimoine culturel, histoire générale et civisme',
+    description: 'Patrimoine culturel, dictée-questions, grammaire et analyse littéraire',
     color: 'from-rose-600 to-rose-800',
+  },
+  {
+    id: 'col-7',
+    name: 'Collection Papyrus',
+    description: 'Romans, poésie et créations littéraires ivoiriennes et africaines',
+    color: 'from-purple-600 to-purple-800',
   },
 ];
 
