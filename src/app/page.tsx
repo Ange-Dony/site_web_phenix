@@ -84,7 +84,7 @@ export default function HomePage() {
                 </Link>
 
                 <a
-                  href="https://wa.me/2250700000000"
+                  href="https://wa.me/2250718784093"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full sm:w-auto px-5 py-3.5 rounded-xl bg-emerald-600/90 hover:bg-emerald-600 text-white font-bold text-sm flex items-center justify-center gap-2 transition-all hover:scale-[1.02]"
@@ -369,7 +369,7 @@ export default function HomePage() {
             </p>
           </div>
           <a
-            href="https://wa.me/2250700000000?text=Bonjour,%20je%20suis%20un%20%C3%A9tablissement%20scolaire%20/%20librairie%20et%20je%20souhaite%20un%20devis%20de%20commande%20en%20gros."
+            href="https://wa.me/2250718784093?text=Bonjour,%20je%20suis%20un%20%C3%A9tablissement%20scolaire%20/%20librairie%20et%20je%20souhaite%20un%20devis%20de%20commande%20en%20gros."
             target="_blank"
             rel="noopener noreferrer"
             className="px-6 py-3 rounded-xl bg-white text-emerald-800 font-bold text-xs hover:bg-emerald-50 transition-all shrink-0"

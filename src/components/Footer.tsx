@@ -33,7 +33,7 @@ export default function Footer() {
             </p>
             <div className="pt-2">
               <a
-                href="https://wa.me/2250700000000"
+                href="https://wa.me/2250718784093"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 text-xs font-semibold hover:bg-emerald-600 hover:text-white transition-all"
@@ -120,11 +120,11 @@ export default function Footer() {
             <div className="space-y-2.5 text-sm text-slate-400">
               <div className="flex items-start gap-2.5">
                 <MapPin className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                <span>Abidjan, Côte d'Ivoire</span>
+                <span>Abidjan-Yopougon-Sogefiha solic 2</span>
               </div>
-              <div className="flex items-center gap-2.5">
-                <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>+225 07 00 00 00 00</span>
+              <div className="flex items-start gap-2.5">
+                <Phone className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <span className="leading-snug">07 18 78 40 93 / 07 07 34 49 75 / 05 04 30 37 92</span>
               </div>
               <div className="flex items-center gap-2.5">
                 <Mail className="w-4 h-4 text-amber-400 shrink-0" />

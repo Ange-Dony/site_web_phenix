@@ -57,7 +57,7 @@ export default function BookDetailPage() {
 
   const handleWhatsAppOrder = () => {
     const text = encodeURIComponent(
-      `Bonjour les Éditions Phénix ! Je souhaite commander ce livre :\n\n` +
+      `Bonjour Les Éditions Phénix - La Maison du Succès ! Je souhaite commander cet ouvrage :\n\n` +
       `📖 *${book.title}*\n` +
       `Quantité : ${quantity} exemplaire(s)\n` +
       `💰 Prix unitaire : ${book.price.toLocaleString('fr-FR')} FCFA\n` +
@@ -66,7 +66,7 @@ export default function BookDetailPage() {
       `Collection : ${book.collection || 'Générale'}\n\n` +
       `Pouvez-vous me donner les détails pour la livraison et le règlement svp ?`
     );
-    window.open(`https://wa.me/2250700000000?text=${text}`, '_blank');
+    window.open(`https://wa.me/2250718784093?text=${text}`, '_blank');
   };
 
   return (

@@ -45,13 +45,13 @@ export default function Navbar() {
           </div>
           <div className="flex items-center gap-4 hidden sm:flex">
             <a 
-              href="https://wa.me/2250700000000" 
+              href="https://wa.me/2250718784093" 
               target="_blank" 
               rel="noopener noreferrer"
               className="hover:text-amber-200 transition-colors flex items-center gap-1 font-medium"
             >
               <Phone className="w-3 h-3 text-emerald-400" />
-              <span>Assistance WhatsApp : +225 07 00 00 00</span>
+              <span>Assistance WhatsApp : 07 18 78 40 93</span>
             </a>
             <Link 
               href="/admin/dashboard" 

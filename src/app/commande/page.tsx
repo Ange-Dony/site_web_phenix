@@ -34,7 +34,7 @@ export default function CommandePage() {
   const [orderCompleted, setOrderCompleted] = useState<{ code: string; message: string } | null>(null);
 
   // Numéro WhatsApp vendeur
-  const sellerWhatsApp = '2250700000000';
+  const sellerWhatsApp = '2250718784093';
 
   const generateOrderMessage = (orderCode: string) => {
     let msg = `🌟 *NOUVELLE COMMANDE - LES ÉDITIONS PHÉNIX*\n`;

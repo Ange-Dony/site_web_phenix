@@ -19,7 +19,7 @@ export default function ContactPage() {
       `📌 Objet : ${subject}\n\n` +
       `💬 Message :\n${message}`
     );
-    window.open(`https://wa.me/2250700000000?text=${text}`, '_blank');
+    window.open(`https://wa.me/2250718784093?text=${text}`, '_blank');
     setSubmitted(true);
   };
 
@@ -42,7 +42,7 @@ export default function ContactPage() {
 
             <div className="space-y-4 text-sm text-slate-600">
               <a
-                href="https://wa.me/2250700000000"
+                href="https://wa.me/2250718784093"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200/80 flex items-center gap-3 text-emerald-900 font-semibold hover:bg-emerald-100 transition-colors"
@@ -52,27 +52,29 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <span className="text-xs text-emerald-700 block font-normal">WhatsApp Ventes & Service Client</span>
-                  <span>+225 07 00 00 00 00</span>
+                  <span>07 18 78 40 93</span>
                 </div>
               </a>
 
-              <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/60 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-700 text-white flex items-center justify-center shrink-0">
-                  <Mail className="w-5 h-5" />
+              <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/60 flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-700 text-white flex items-center justify-center shrink-0 mt-0.5">
+                  <Phone className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="text-xs text-slate-500 block">Adresse Email</span>
-                  <span className="font-semibold text-slate-800">contact@editions-phenix.com</span>
+                  <span className="text-xs text-slate-500 block">Lignes Téléphoniques</span>
+                  <span className="font-semibold text-slate-800 leading-snug block">
+                    07 18 78 40 93 / 07 07 34 49 75 / 05 04 30 37 92
+                  </span>
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-slate-800 text-white flex items-center justify-center shrink-0">
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-slate-800 text-white flex items-center justify-center shrink-0 mt-0.5">
                   <MapPin className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="text-xs text-slate-500 block">Siège Éditorial</span>
-                  <span className="font-semibold text-slate-800">Abidjan, Côte d'Ivoire</span>
+                  <span className="text-xs text-slate-500 block">Siège Social</span>
+                  <span className="font-semibold text-slate-800">Abidjan-Yopougon-Sogefiha solic 2</span>
                 </div>
               </div>
             </div>

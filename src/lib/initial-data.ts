@@ -3,10 +3,10 @@ import { Book, Corrige, SiteSettings } from '@/types';
 export const INITIAL_SETTINGS: SiteSettings = {
   site_name: 'Les Éditions Phénix',
   site_tagline: 'La Maison du Succès',
-  phone: '+225 07 00 00 00 00',
-  whatsapp_number: '2250700000000', // Format international sans '+' pour l'API wa.me
+  phone: '07 18 78 40 93 / 07 07 34 49 75 / 05 04 30 37 92',
+  whatsapp_number: '2250718784093', // Format international sans '+' pour l'API wa.me
   email: 'contact@editions-phenix.com',
-  address: 'Abidjan, Côte d\'Ivoire',
+  address: 'Abidjan-Yopougon-Sogefiha solic 2',
   about_text: 'Les Éditions Phénix - La Maison du Succès : maison d\'édition ivoirienne dédiée à l\'accompagnement des élèves, enseignants et établissements scolaires à travers des activités d\'évaluation rigoureuses, des annales d\'examens complètes, des guides méthodologiques éprouvés et des œuvres littéraires captivantes.',
   currency: 'FCFA',
 };

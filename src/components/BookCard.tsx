@@ -11,13 +11,13 @@ export default function BookCard({ book }: { book: Book }) {
 
   const generateSingleWhatsAppLink = (b: Book) => {
     const text = encodeURIComponent(
-      `Bonjour les Éditions Phénix ! Je souhaite commander un exemplaire de votre livre :\n\n` +
+      `Bonjour Les Éditions Phénix - La Maison du Succès ! Je souhaite commander un exemplaire de cet ouvrage :\n\n` +
       `📖 *${b.title}*\n` +
       `💰 Prix : ${b.price.toLocaleString('fr-FR')} FCFA\n` +
       `Auteur : ${b.author}\n\n` +
       `Pouvez-vous m'indiquer la disponibilité et les modalités de livraison svp ?`
     );
-    return `https://wa.me/2250700000000?text=${text}`;
+    return `https://wa.me/2250718784093?text=${text}`;
   };
 
   return (
