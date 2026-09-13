@@ -17,18 +17,31 @@ import {
   Sparkles
 } from 'lucide-react';
 import { INITIAL_BOOKS, INITIAL_CORRIGES } from '@/lib/initial-data';
+import { getBooks } from '@/lib/supabase';
 import { useCart } from '@/lib/cart-context';
 import BookCard from '@/components/BookCard';
-import BookFlipbook from '@/components/BookFlipbook';
+import { Book } from '@/types';
 
 export default function BookDetailPage() {
   const params = useParams();
   const slug = params?.slug as string;
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
-  const [showFlipbook, setShowFlipbook] = useState(false);
+  const [allBooks, setAllBooks] = useState<Book[]>(INITIAL_BOOKS);
 
-  const book = INITIAL_BOOKS.find((b) => b.slug === slug);
+  React.useEffect(() => {
+    async function load() {
+      try {
+        const loaded = await getBooks();
+        if (loaded && loaded.length > 0) {
+          setAllBooks(loaded);
+        }
+      } catch {}
+    }
+    load();
+  }, []);
+
+  const book = allBooks.find((b) => b.slug === slug);
 
   if (!book) {
     return (
@@ -95,15 +108,6 @@ export default function BookDetailPage() {
                 className="w-full h-full object-cover"
               />
             </div>
-
-            {/* Bouton Feuilleter l'extrait */}
-            <button
-              onClick={() => setShowFlipbook(true)}
-              className="w-full max-w-xs py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.02]"
-            >
-              <BookOpen className="w-4 h-4" />
-              <span>Feuilleter l'extrait (Flipbook 3D)</span>
-            </button>
 
             {book.collection && (
               <div className="px-4 py-1.5 rounded-full bg-amber-100 text-amber-900 font-bold text-xs">
@@ -301,13 +305,6 @@ export default function BookDetailPage() {
         </div>
       )}
 
-      {/* Liseuse Flipbook si activée */}
-      {showFlipbook && (
-        <BookFlipbook
-          book={book}
-          onClose={() => setShowFlipbook(false)}
-        />
-      )}
     </div>
   );
 }

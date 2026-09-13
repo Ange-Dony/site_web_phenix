@@ -14,26 +14,32 @@ import {
   ExternalLink, 
   Layers, 
   ShoppingBag, 
-  Settings, 
   ShieldCheck, 
   Database,
-  Image as ImageIcon,
   Eye,
   Phone,
   Bookmark,
-  Sparkles,
-  RotateCcw,
   Building2,
   ListOrdered,
-  X
+  X,
+  ArrowUp,
+  ArrowDown,
+  GraduationCap,
+  LayoutTemplate
 } from 'lucide-react';
-import { Book, Corrige, Order, SiteSettings, CollectionItem, DisciplineItem, ResellerOrder } from '@/types';
+import { Book, Corrige, Order, SiteSettings, CollectionItem, DisciplineItem, ResellerOrder, LevelItem, SectionContent } from '@/types';
 import { 
   getBooks, 
   getCorriges, 
   getSiteSettings, 
   getCollections, 
   getDisciplines,
+  getLevels,
+  saveLevel,
+  deleteLevel,
+  getSectionContents,
+  saveSectionContent,
+  saveAllBooks,
   getResellerOrders,
   saveCollection,
   deleteCollection,
@@ -46,15 +52,16 @@ import {
   supabase, 
   isSupabaseConfigured 
 } from '@/lib/supabase';
-import BookFlipbook from '@/components/BookFlipbook';
 
-type TabType = 'books' | 'extraits' | 'collections' | 'disciplines' | 'corriges' | 'orders' | 'settings';
+type TabType = 'books' | 'levels' | 'sections' | 'collections' | 'disciplines' | 'corriges' | 'orders';
 
 export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState<TabType>('books');
 
   // Données
   const [books, setBooks] = useState<Book[]>([]);
+  const [levels, setLevels] = useState<LevelItem[]>([]);
+  const [sections, setSections] = useState<SectionContent[]>([]);
   const [corriges, setCorriges] = useState<Corrige[]>([]);
   const [collections, setCollections] = useState<CollectionItem[]>([]);
   const [disciplines, setDisciplines] = useState<DisciplineItem[]>([]);
@@ -62,14 +69,11 @@ export default function AdminDashboardPage() {
   const [resellerOrders, setResellerOrders] = useState<ResellerOrder[]>([]);
   const [orderSubTab, setOrderSubTab] = useState<'retail' | 'reseller'>('retail');
 
-  // Flipbook preview modal
-  const [flipbookBook, setFlipbookBook] = useState<Book | null>(null);
-
   // Formulaire d'ajout / modification de Livre
   const [editingBookId, setEditingBookId] = useState<string | null>(null);
   const [bookForm, setBookForm] = useState({
     title: '',
-    author: '', // FACULTATIF
+    author: '', // FACULTATIF STRICTEMENT RESPECTÉ
     collection: 'Collection Succès',
     category: 'Histoire-Géographie',
     level: '3ème (BEPC)',
@@ -79,11 +83,32 @@ export default function AdminDashboardPage() {
     cover_url: '',
     page_count: 180,
     published_year: new Date().getFullYear(),
-    extract_pages_text: '', // URLs séparées par des virgules ou retours à la ligne
+    order_index: 1,
   });
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
+
+  // Formulaire d'ajout / modification de Niveau (Classe)
+  const [editingLevelId, setEditingLevelId] = useState<string | null>(null);
+  const [levelForm, setLevelForm] = useState({
+    name: '',
+    cycle: 'Collège',
+    order_index: 1,
+    description: '',
+  });
+
+  // Formulaire de modification de Rubrique / Section
+  const [editingSectionKey, setEditingSectionKey] = useState<string | null>(null);
+  const [sectionForm, setSectionForm] = useState({
+    section_key: '',
+    title: '',
+    subtitle: '',
+    content: '',
+    banner_text: '',
+    order_index: 1,
+    is_visible: true,
+  });
 
   // Formulaire d'ajout / modification de Collection
   const [editingColId, setEditingColId] = useState<string | null>(null);
@@ -113,35 +138,28 @@ export default function AdminDashboardPage() {
   const [docFile, setDocFile] = useState<File | null>(null);
   const [isUploadingDoc, setIsUploadingDoc] = useState(false);
 
-  // Formulaire de gestion des extraits
-  const [selectedExtractBookId, setSelectedExtractBookId] = useState<string>('');
-  const [extractPagesInput, setExtractPagesInput] = useState<string>('');
-  const [extractImageFile, setExtractImageFile] = useState<File | null>(null);
-  const [isUploadingExtractPage, setIsUploadingExtractPage] = useState(false);
-
   // Notification Toast
   const [notification, setNotification] = useState<string | null>(null);
 
   // Charger toutes les données
   useEffect(() => {
     async function loadData() {
-      const [b, c, col, d, resOrders] = await Promise.all([
+      const [b, lvl, sec, c, col, d, resOrders] = await Promise.all([
         getBooks(),
+        getLevels(),
+        getSectionContents(),
         getCorriges(),
         getCollections(),
         getDisciplines(),
         getResellerOrders()
       ]);
       setBooks(b);
+      setLevels(lvl);
+      setSections(sec);
       setCorriges(c);
       setCollections(col);
       setDisciplines(d);
       setResellerOrders(resOrders);
-
-      if (b.length > 0 && !selectedExtractBookId) {
-        setSelectedExtractBookId(b[0].id);
-        setExtractPagesInput(b[0].extract_pages ? b[0].extract_pages.join('\n') : '');
-      }
 
       if (supabase && isSupabaseConfigured) {
         try {
@@ -164,6 +182,51 @@ export default function AdminDashboardPage() {
   };
 
   // =========================================================================
+  // GESTION DE L'ORDRE DES LIVRES (REORDERING)
+  // =========================================================================
+  const handleMoveBookUp = async (index: number) => {
+    if (index <= 0) return;
+    const newBooks = [...books];
+    const prev = newBooks[index - 1];
+    const curr = newBooks[index];
+
+    // Échanger les positions
+    newBooks[index - 1] = curr;
+    newBooks[index] = prev;
+
+    // Réassigner order_index séquentiel
+    const reordered = newBooks.map((b, idx) => ({
+      ...b,
+      order_index: idx + 1,
+    }));
+
+    setBooks(reordered);
+    await saveAllBooks(reordered);
+    showNotification(`L'ordre de "${curr.title}" a été déplacé vers le haut (#${index}).`);
+  };
+
+  const handleMoveBookDown = async (index: number) => {
+    if (index >= books.length - 1) return;
+    const newBooks = [...books];
+    const curr = newBooks[index];
+    const next = newBooks[index + 1];
+
+    // Échanger les positions
+    newBooks[index] = next;
+    newBooks[index + 1] = curr;
+
+    // Réassigner order_index séquentiel
+    const reordered = newBooks.map((b, idx) => ({
+      ...b,
+      order_index: idx + 1,
+    }));
+
+    setBooks(reordered);
+    await saveAllBooks(reordered);
+    showNotification(`L'ordre de "${curr.title}" a été déplacé vers le bas (#${index + 2}).`);
+  };
+
+  // =========================================================================
   // GESTION DES LIVRES / DOCUMENTS
   // =========================================================================
   const handleCoverSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -181,14 +244,14 @@ export default function AdminDashboardPage() {
       author: b.author || '',
       collection: b.collection || collections[0]?.name || 'Collection Succès',
       category: b.category || disciplines[0]?.name || 'Histoire-Géographie',
-      level: b.level || '3ème (BEPC)',
+      level: b.level || levels[0]?.name || '3ème (BEPC)',
       price: b.price,
       old_price: b.old_price ? String(b.old_price) : '',
       description: b.description || '',
       cover_url: b.cover_url || '',
       page_count: b.page_count || 180,
       published_year: b.published_year || new Date().getFullYear(),
-      extract_pages_text: b.extract_pages ? b.extract_pages.join('\n') : '',
+      order_index: b.order_index ?? (books.findIndex(item => item.id === b.id) + 1),
     });
     setCoverPreview(b.cover_url);
     setActiveTab('books');
@@ -204,20 +267,19 @@ export default function AdminDashboardPage() {
       author: '',
       collection: collections[0]?.name || 'Collection Succès',
       category: disciplines[0]?.name || 'Histoire-Géographie',
-      level: '3ème (BEPC)',
+      level: levels[0]?.name || '3ème (BEPC)',
       price: 4000,
       old_price: '',
       description: '',
       cover_url: '',
       page_count: 180,
       published_year: new Date().getFullYear(),
-      extract_pages_text: '',
+      order_index: books.length + 1,
     });
   };
 
   const handleSaveBook = async (e: React.FormEvent) => {
     e.preventDefault();
-    // LE TITRE EST OBLIGATOIRE, MAIS L'AUTEUR EST FACULTATIF !
     if (!bookForm.title.trim()) {
       alert('Veuillez renseigner le titre du document / ouvrage.');
       return;
@@ -235,63 +297,45 @@ export default function AdminDashboardPage() {
       }
     }
 
-    const pagesArray = bookForm.extract_pages_text
-      .split('\n')
-      .map((p) => p.trim())
-      .filter((p) => p.length > 0);
-
     const bookPayload: Partial<Book> = {
       title: bookForm.title.trim(),
-      author: bookForm.author.trim() || 'Éditions Phénix', // Valeur par défaut si omis
+      author: bookForm.author.trim() || undefined,
       collection: bookForm.collection,
       category: bookForm.category,
+      discipline: bookForm.category,
       level: bookForm.level,
-      price: Number(bookForm.price) || 0,
-      old_price: bookForm.old_price ? Number(bookForm.old_price) : null,
-      description: bookForm.description || 'Activité d\'évaluation et préparation aux examens.',
+      price: Number(bookForm.price),
+      old_price: bookForm.old_price ? Number(bookForm.old_price) : undefined,
+      description: bookForm.description.trim(),
       cover_url: finalCoverUrl,
-      page_count: Number(bookForm.page_count) || 150,
+      cover_image: finalCoverUrl,
+      page_count: Number(bookForm.page_count) || 180,
       published_year: Number(bookForm.published_year) || new Date().getFullYear(),
-      extract_pages: pagesArray,
+      order_index: Number(bookForm.order_index) || (books.length + 1),
     };
 
     if (editingBookId) {
-      // Modification d'un livre existant
       await updateBook(editingBookId, bookPayload);
-      setBooks((prev) =>
-        prev.map((b) => (b.id === editingBookId ? { ...b, ...bookPayload } as Book : b))
-      );
+      setBooks((prev) => {
+        const updated = prev.map((b) => (b.id === editingBookId ? { ...b, ...bookPayload } as Book : b));
+        return updated.sort((a, b) => (a.order_index ?? 999) - (b.order_index ?? 999));
+      });
       showNotification(`Ouvrage "${bookForm.title}" mis à jour avec succès !`);
     } else {
-      // Ajout d'un nouveau livre
-      const generatedSlug = bookForm.title
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
-
-      const newRecord: Book = {
-        id: 'b_' + Date.now(),
-        slug: `${generatedSlug}-${Date.now().toString().slice(-4)}`,
-        is_featured: true,
+      const newBookRecord: Book = {
+        id: `custom_${Date.now()}`,
+        slug: bookForm.title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+        currency: 'FCFA',
         in_stock: true,
+        is_featured: false,
+        created_at: new Date().toISOString(),
         ...bookPayload,
       } as Book;
 
-      if (supabase && isSupabaseConfigured) {
-        try {
-          const { data } = await supabase.from('books').insert([newRecord]).select('*').single();
-          if (data) setBooks([data as Book, ...books]);
-          else setBooks([newRecord, ...books]);
-        } catch {
-          setBooks([newRecord, ...books]);
-        }
-      } else {
-        setBooks([newRecord, ...books]);
-        localStorage.setItem('phenix_custom_books', JSON.stringify([newRecord, ...books]));
-      }
-      showNotification(`Ouvrage "${bookForm.title}" ajouté au catalogue !`);
+      const updatedList = [...books, newBookRecord].sort((a, b) => (a.order_index ?? 999) - (b.order_index ?? 999));
+      setBooks(updatedList);
+      await saveAllBooks(updatedList);
+      showNotification(`Document "${bookForm.title}" ajouté au catalogue !`);
     }
 
     setIsUploadingCover(false);
@@ -299,7 +343,7 @@ export default function AdminDashboardPage() {
   };
 
   const handleDeleteBook = async (id: string, title: string) => {
-    if (confirm(`Êtes-vous sûr de vouloir supprimer définitivement l'ouvrage "${title}" ?`)) {
+    if (confirm(`Voulez-vous vraiment supprimer "${title}" du catalogue ?`)) {
       await deleteBook(id);
       setBooks((prev) => prev.filter((b) => b.id !== id));
       showNotification(`Ouvrage "${title}" supprimé.`);
@@ -307,30 +351,101 @@ export default function AdminDashboardPage() {
   };
 
   // =========================================================================
-  // GESTION DES COLLECTIONS
+  // GESTION DES NIVEAUX / CLASSES (CRUD)
   // =========================================================================
-  const handleSaveCollection = async (e: React.FormEvent) => {
+  const handleEditLevel = (lvl: LevelItem) => {
+    setEditingLevelId(lvl.id);
+    setLevelForm({
+      name: lvl.name,
+      cycle: lvl.cycle || 'Collège',
+      order_index: lvl.order_index ?? 1,
+      description: lvl.description || '',
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancelEditLevel = () => {
+    setEditingLevelId(null);
+    setLevelForm({
+      name: '',
+      cycle: 'Collège',
+      order_index: levels.length + 1,
+      description: '',
+    });
+  };
+
+  const handleSaveLevel = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!colForm.name.trim()) {
-      alert('Veuillez renseigner le nom de la collection.');
+    if (!levelForm.name.trim()) {
+      alert('Veuillez renseigner le nom de la classe / niveau.');
       return;
     }
 
-    const colItem: CollectionItem = {
-      id: editingColId || 'col-' + Date.now(),
-      name: colForm.name.trim(),
-      description: colForm.description.trim(),
-      color: colForm.color,
+    const payload: LevelItem = {
+      id: editingLevelId || `lvl_${Date.now()}`,
+      name: levelForm.name.trim(),
+      cycle: levelForm.cycle.trim() || undefined,
+      order_index: Number(levelForm.order_index) || (levels.length + 1),
+      description: levelForm.description.trim() || undefined,
     };
 
-    await saveCollection(colItem);
-    const updated = await getCollections();
-    setCollections(updated);
-    setEditingColId(null);
-    setColForm({ name: '', description: '', color: 'from-amber-600 to-amber-800' });
-    showNotification(`Collection "${colItem.name}" enregistrée avec succès !`);
+    await saveLevel(payload);
+    const updated = await getLevels();
+    setLevels(updated);
+    showNotification(`Niveau "${payload.name}" enregistré avec succès !`);
+    handleCancelEditLevel();
   };
 
+  const handleDeleteLevel = async (id: string, name: string) => {
+    if (confirm(`Voulez-vous supprimer le niveau / classe "${name}" ?`)) {
+      await deleteLevel(id);
+      setLevels((prev) => prev.filter((l) => l.id !== id));
+      showNotification(`Niveau "${name}" supprimé.`);
+    }
+  };
+
+  // =========================================================================
+  // GESTION DES RUBRIQUES / CONTENUS DE PAGES (CRUD)
+  // =========================================================================
+  const handleEditSection = (sec: SectionContent) => {
+    setEditingSectionKey(sec.section_key);
+    setSectionForm({
+      section_key: sec.section_key,
+      title: sec.title,
+      subtitle: sec.subtitle || '',
+      content: sec.content || '',
+      banner_text: sec.banner_text || '',
+      order_index: sec.order_index ?? 1,
+      is_visible: sec.is_visible ?? true,
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSaveSection = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sectionForm.section_key) return;
+
+    const payload: SectionContent = {
+      section_key: sectionForm.section_key,
+      title: sectionForm.title.trim(),
+      subtitle: sectionForm.subtitle.trim() || undefined,
+      content: sectionForm.content.trim() || undefined,
+      banner_text: sectionForm.banner_text.trim() || undefined,
+      order_index: Number(sectionForm.order_index) || 1,
+      is_visible: sectionForm.is_visible,
+      updated_at: new Date().toISOString(),
+    };
+
+    await saveSectionContent(payload);
+    const updated = await getSectionContents();
+    setSections(updated);
+    showNotification(`Rubrique "${payload.section_key}" mise à jour !`);
+    setEditingSectionKey(null);
+  };
+
+  // =========================================================================
+  // GESTION DES COLLECTIONS
+  // =========================================================================
   const handleEditCollection = (c: CollectionItem) => {
     setEditingColId(c.id);
     setColForm({
@@ -340,39 +455,37 @@ export default function AdminDashboardPage() {
     });
   };
 
+  const handleSaveCollection = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!colForm.name.trim()) return;
+
+    const payload: CollectionItem = {
+      id: editingColId || `col_${Date.now()}`,
+      name: colForm.name.trim(),
+      slug: colForm.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-'),
+      description: colForm.description.trim() || undefined,
+      color: colForm.color,
+    };
+
+    await saveCollection(payload);
+    const updated = await getCollections();
+    setCollections(updated);
+    setEditingColId(null);
+    setColForm({ name: '', description: '', color: 'from-amber-600 to-amber-800' });
+    showNotification(`Collection "${payload.name}" enregistrée !`);
+  };
+
   const handleDeleteCollection = async (id: string, name: string) => {
     if (confirm(`Voulez-vous supprimer la collection "${name}" ?`)) {
       await deleteCollection(id);
-      const updated = await getCollections();
-      setCollections(updated);
+      setCollections((prev) => prev.filter((c) => c.id !== id));
       showNotification(`Collection "${name}" supprimée.`);
     }
   };
 
   // =========================================================================
-  // GESTION DES DISCIPLINES / MATIÈRES
+  // GESTION DES DISCIPLINES
   // =========================================================================
-  const handleSaveDiscipline = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!discForm.name.trim()) {
-      alert('Veuillez renseigner le nom de la matière / discipline.');
-      return;
-    }
-
-    const discItem: DisciplineItem = {
-      id: editingDiscId || 'disc-' + Date.now(),
-      name: discForm.name.trim(),
-      description: discForm.description.trim(),
-    };
-
-    await saveDiscipline(discItem);
-    const updated = await getDisciplines();
-    setDisciplines(updated);
-    setEditingDiscId(null);
-    setDiscForm({ name: '', description: '' });
-    showNotification(`Matière / Discipline "${discItem.name}" enregistrée avec succès !`);
-  };
-
   const handleEditDiscipline = (d: DisciplineItem) => {
     setEditingDiscId(d.id);
     setDiscForm({
@@ -381,60 +494,31 @@ export default function AdminDashboardPage() {
     });
   };
 
+  const handleSaveDiscipline = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!discForm.name.trim()) return;
+
+    const payload: DisciplineItem = {
+      id: editingDiscId || `disc_${Date.now()}`,
+      name: discForm.name.trim(),
+      slug: discForm.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-'),
+      description: discForm.description.trim() || undefined,
+    };
+
+    await saveDiscipline(payload);
+    const updated = await getDisciplines();
+    setDisciplines(updated);
+    setEditingDiscId(null);
+    setDiscForm({ name: '', description: '' });
+    showNotification(`Discipline "${payload.name}" enregistrée !`);
+  };
+
   const handleDeleteDiscipline = async (id: string, name: string) => {
     if (confirm(`Voulez-vous supprimer la discipline "${name}" ?`)) {
       await deleteDiscipline(id);
-      const updated = await getDisciplines();
-      setDisciplines(updated);
+      setDisciplines((prev) => prev.filter((d) => d.id !== id));
       showNotification(`Discipline "${name}" supprimée.`);
     }
-  };
-
-  // =========================================================================
-  // GESTION DES EXTRAITS (FLIPBOOK)
-  // =========================================================================
-  const handleSelectBookForExtract = (bookId: string) => {
-    setSelectedExtractBookId(bookId);
-    const b = books.find((x) => x.id === bookId);
-    if (b) {
-      setExtractPagesInput(b.extract_pages ? b.extract_pages.join('\n') : '');
-    }
-  };
-
-  const handleSaveExtractPages = async () => {
-    if (!selectedExtractBookId) return;
-    const pagesArray = extractPagesInput
-      .split('\n')
-      .map((p) => p.trim())
-      .filter((p) => p.length > 0);
-
-    await updateBook(selectedExtractBookId, { extract_pages: pagesArray });
-    setBooks((prev) =>
-      prev.map((b) => (b.id === selectedExtractBookId ? { ...b, extract_pages: pagesArray } : b))
-    );
-    showNotification('Pages d\'extrait sauvegardées avec succès !');
-  };
-
-  const handleUploadExtractPageImage = async () => {
-    if (!extractImageFile || !selectedExtractBookId) return;
-    setIsUploadingExtractPage(true);
-    let uploadedUrl = '';
-
-    if (isSupabaseConfigured) {
-      const res = await uploadFileToSupabase(extractImageFile, 'covers');
-      if (res.url) uploadedUrl = res.url;
-    }
-
-    if (!uploadedUrl) {
-      uploadedUrl = URL.createObjectURL(extractImageFile);
-    }
-
-    const currentText = extractPagesInput.trim();
-    const newText = currentText ? `${currentText}\n${uploadedUrl}` : uploadedUrl;
-    setExtractPagesInput(newText);
-    setExtractImageFile(null);
-    setIsUploadingExtractPage(false);
-    showNotification('Image de page téléversée et ajoutée à la liste !');
   };
 
   // =========================================================================
@@ -469,43 +553,36 @@ export default function AdminDashboardPage() {
       if (uploadRes.url) finalDocUrl = uploadRes.url;
     }
 
-    const targetBook = books.find((b) => b.id === corrigeForm.book_id);
-
     const newCorrigeRecord: Corrige = {
-      id: editingCorrigeId || 'c_' + Date.now(),
+      id: editingCorrigeId || `c_${Date.now()}`,
       title: corrigeForm.title.trim(),
       subject: corrigeForm.subject,
       level: corrigeForm.level,
-      book_id: corrigeForm.book_id || null,
-      book_title: targetBook ? targetBook.title : '',
-      description: corrigeForm.description || 'Corrigé officiel rédigé par l\'équipe pédagogique Phénix.',
+      book_id: corrigeForm.book_id || undefined,
+      book_title: books.find((b) => b.id === corrigeForm.book_id)?.title,
+      description: corrigeForm.description.trim() || undefined,
       file_url: finalDocUrl,
       file_name: finalFileName,
-      file_type: corrigeForm.file_type,
       file_size: finalSize,
+      file_type: corrigeForm.file_type,
       download_count: 0,
+      is_free: true,
+      created_at: new Date().toISOString(),
     };
 
-    if (editingCorrigeId) {
-      setCorriges((prev) =>
-        prev.map((c) => (c.id === editingCorrigeId ? newCorrigeRecord : c))
-      );
-      showNotification(`Corrigé "${corrigeForm.title}" mis à jour !`);
-    } else {
-      if (supabase && isSupabaseConfigured) {
-        try {
-          const { data } = await supabase.from('corriges').insert([newCorrigeRecord]).select('*').single();
-          if (data) setCorriges([data as Corrige, ...corriges]);
-          else setCorriges([newCorrigeRecord, ...corriges]);
-        } catch {
-          setCorriges([newCorrigeRecord, ...corriges]);
-        }
-      } else {
+    if (supabase && isSupabaseConfigured) {
+      try {
+        await supabase.from('corriges').upsert(newCorrigeRecord);
+        const updatedCorriges = await getCorriges();
+        setCorriges(updatedCorriges);
+      } catch {
         setCorriges([newCorrigeRecord, ...corriges]);
-        localStorage.setItem('phenix_custom_corriges', JSON.stringify([newCorrigeRecord, ...corriges]));
       }
-      showNotification(`Corrigé "${corrigeForm.title}" publié avec succès !`);
+    } else {
+      setCorriges([newCorrigeRecord, ...corriges]);
+      localStorage.setItem('phenix_custom_corriges', JSON.stringify([newCorrigeRecord, ...corriges]));
     }
+    showNotification(`Corrigé "${corrigeForm.title}" publié avec succès !`);
 
     setIsUploadingDoc(false);
     setDocFile(null);
@@ -538,7 +615,7 @@ export default function AdminDashboardPage() {
             <span>Portail d'Administration • Les Éditions Phénix</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-serif font-black text-slate-900">
-            Gestion du Catalogue, Extraits Flipbook & Commandes
+            Gestion du Catalogue, Niveaux, Rubriques & Commandes
           </h1>
         </div>
 
@@ -584,15 +661,27 @@ export default function AdminDashboardPage() {
         </button>
 
         <button
-          onClick={() => setActiveTab('extraits')}
+          onClick={() => setActiveTab('levels')}
           className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
-            activeTab === 'extraits'
+            activeTab === 'levels'
               ? 'bg-amber-500 text-slate-950 shadow-sm'
               : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
           }`}
         >
-          <Sparkles className="w-4 h-4 text-purple-600" />
-          <span>Extraits & Flipbook 3D</span>
+          <GraduationCap className="w-4 h-4 text-blue-600" />
+          <span>Niveaux / Classes ({levels.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('sections')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+            activeTab === 'sections'
+              ? 'bg-amber-500 text-slate-950 shadow-sm'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          <LayoutTemplate className="w-4 h-4 text-purple-600" />
+          <span>Rubriques & Textes ({sections.length})</span>
         </button>
 
         <button
@@ -645,7 +734,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* ===================================================================== */}
-      {/* ONGLET 1 : DOCUMENTS & OUVRAGES                                       */}
+      {/* ONGLET 1 : DOCUMENTS & OUVRAGES (AVEC GESTION DE L'ORDRE)              */}
       {/* ===================================================================== */}
       {activeTab === 'books' && (
         <div className="space-y-8">
@@ -699,7 +788,7 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
                 {/* Collection dynamique */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
@@ -732,25 +821,19 @@ export default function AdminDashboardPage() {
                   </select>
                 </div>
 
-                {/* Niveau */}
+                {/* Niveau dynamique */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Niveau Scolaire *
+                    Niveau / Classe *
                   </label>
                   <select
                     value={bookForm.level}
                     onChange={(e) => setBookForm({ ...bookForm, level: e.target.value })}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs bg-white focus:outline-hidden focus:border-amber-600"
                   >
-                    <option value="6ème">6ème</option>
-                    <option value="5ème">5ème</option>
-                    <option value="4ème">4ème</option>
-                    <option value="3ème (BEPC)">3ème (BEPC)</option>
-                    <option value="2nde">Seconde</option>
-                    <option value="1ère">Première</option>
-                    <option value="Terminale (BAC)">Terminale (BAC)</option>
-                    <option value="Collège & Lycée">Collège & Lycée</option>
-                    <option value="Tout public">Tout public</option>
+                    {levels.map((lvl) => (
+                      <option key={lvl.id} value={lvl.name}>{lvl.name} {lvl.cycle ? `(${lvl.cycle})` : ''}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -769,6 +852,20 @@ export default function AdminDashboardPage() {
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold focus:outline-hidden focus:border-amber-600"
                   />
                 </div>
+
+                {/* Ordre d'affichage */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Position (Ordre)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={bookForm.order_index}
+                    onChange={(e) => setBookForm({ ...bookForm, order_index: Number(e.target.value) })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-mono font-bold focus:outline-hidden focus:border-amber-600"
+                  />
+                </div>
               </div>
 
               {/* Description */}
@@ -785,42 +882,22 @@ export default function AdminDashboardPage() {
                 />
               </div>
 
-              {/* Image de couverture & Pages d'extrait */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                {/* Couverture */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-2">
-                    Image de Couverture (JPG, PNG, WebP)
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleCoverSelect}
-                    className="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 cursor-pointer"
-                  />
-                  {coverPreview && (
-                    <div className="mt-3 w-20 h-28 rounded-lg overflow-hidden border border-slate-300 p-1 bg-white">
-                      <img src={coverPreview} alt="Aperçu" className="w-full h-full object-contain" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Extraits textuels / URLs */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Pages d'extraits pour le Flipbook <span className="text-slate-400 font-normal">(URLs, 1 par ligne)</span>
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={bookForm.extract_pages_text}
-                    onChange={(e) => setBookForm({ ...bookForm, extract_pages_text: e.target.value })}
-                    placeholder="https://.../page1.jpg&#10;https://.../page2.jpg"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono focus:outline-hidden focus:border-amber-600"
-                  />
-                  <p className="text-[11px] text-slate-400 mt-1">
-                    Si aucune page n'est renseignée, un extrait de découverte interactif est généré automatiquement.
-                  </p>
-                </div>
+              {/* Couverture */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                <label className="block text-xs font-bold text-slate-700 mb-2">
+                  Image de Couverture (JPG, PNG, WebP)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCoverSelect}
+                  className="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 cursor-pointer"
+                />
+                {coverPreview && (
+                  <div className="mt-3 w-20 h-28 rounded-lg overflow-hidden border border-slate-300 p-1 bg-white">
+                    <img src={coverPreview} alt="Aperçu" className="w-full h-full object-contain" />
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-3">
@@ -836,21 +913,32 @@ export default function AdminDashboardPage() {
             </form>
           </div>
 
-          {/* Liste des livres existants */}
+          {/* Liste des livres avec réorganisation directe (Monter / Descendre) */}
           <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-              <h2 className="text-base font-bold text-slate-900">
-                Catalogue Actuel ({books.length} documents et activités)
-              </h2>
+            <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h2 className="text-base font-bold text-slate-900">
+                  Catalogue Actuel ({books.length} documents et activités)
+                </h2>
+                <p className="text-xs text-slate-500">
+                  Utilisez les flèches ▲ et ▼ pour changer l'ordre d'affichage des documents sur le site.
+                </p>
+              </div>
             </div>
 
             <div className="divide-y divide-slate-100">
-              {books.map((book) => (
+              {books.map((book, idx) => (
                 <div key={book.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50 transition-colors">
                   <div className="flex items-center gap-3.5">
+                    {/* Position badge */}
+                    <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-900 font-mono font-black text-xs flex items-center justify-center shrink-0">
+                      #{idx + 1}
+                    </div>
+
                     <div className="w-12 h-16 rounded-lg bg-slate-100 border border-slate-200 p-0.5 overflow-hidden shrink-0">
                       <img src={book.cover_url} alt={book.title} className="w-full h-full object-contain" />
                     </div>
+
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-sm bg-slate-100 text-slate-700">
@@ -870,14 +958,34 @@ export default function AdminDashboardPage() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setFlipbookBook(book)}
-                      className="p-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-semibold flex items-center gap-1 transition-colors"
-                      title="Feuilleter l'extrait Flipbook"
+                    {/* Boutons d'ordonnancement */}
+                    <div className="flex items-center bg-slate-100 rounded-xl p-1 gap-1 border border-slate-200">
+                      <button
+                        onClick={() => handleMoveBookUp(idx)}
+                        disabled={idx === 0}
+                        className="p-1.5 rounded-lg hover:bg-white text-slate-700 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                        title="Monter dans l'ordre"
+                      >
+                        <ArrowUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleMoveBookDown(idx)}
+                        disabled={idx === books.length - 1}
+                        className="p-1.5 rounded-lg hover:bg-white text-slate-700 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                        title="Descendre dans l'ordre"
+                      >
+                        <ArrowDown className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    <Link
+                      href={`/catalogue/${book.slug}`}
+                      target="_blank"
+                      className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1 transition-colors"
+                      title="Voir sur le site"
                     >
                       <Eye className="w-3.5 h-3.5" />
-                      <span className="hidden md:inline">Feuilleter</span>
-                    </button>
+                    </Link>
 
                     <button
                       onClick={() => handleStartEditBook(book)}
@@ -904,115 +1012,272 @@ export default function AdminDashboardPage() {
       )}
 
       {/* ===================================================================== */}
-      {/* ONGLET 2 : EXTRAITS & FLIPBOOK 3D                                     */}
+      {/* ONGLET 2 : NIVEAUX / CLASSES (CRUD)                                   */}
       {/* ===================================================================== */}
-      {activeTab === 'extraits' && (
-        <div className="space-y-8">
-          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-xs space-y-6">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-100 text-purple-800 text-xs font-bold mb-2">
-                <Sparkles className="w-3.5 h-3.5" />
-                Rubrique Extraits des Documents (Livre Virtuel 3D)
-              </div>
-              <h2 className="text-xl font-bold text-slate-900">
-                Gestion des Pages d'Extrait à Feuilleter
+      {activeTab === 'levels' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Formulaire Niveau */}
+          <div className="lg:col-span-5 bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <GraduationCap className="w-4 h-4 text-blue-600" />
+                <span>{editingLevelId ? 'Modifier la Classe / Niveau' : 'Ajouter une Classe / Niveau'}</span>
               </h2>
-              <p className="text-xs text-slate-500 mt-1">
-                Associez des visuels de pages réelles pour que les visiteurs et revendeurs puissent feuilleter vos ouvrages comme un livre papier.
-              </p>
-            </div>
-
-            {/* Sélecteur de livre */}
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-              <label className="block text-xs font-bold text-slate-700">
-                1. Sélectionner l'ouvrage à configurer :
-              </label>
-              <select
-                value={selectedExtractBookId}
-                onChange={(e) => handleSelectBookForExtract(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold bg-white focus:outline-hidden focus:border-amber-600"
-              >
-                {books.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.title} ({b.level}) {b.extract_pages && b.extract_pages.length > 0 ? `[${b.extract_pages.length} pages]` : '[Extrait auto]'}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Téléverser une page image */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="space-y-3 p-4 rounded-2xl border border-slate-200 bg-white">
-                <h3 className="font-bold text-xs text-slate-800 flex items-center gap-1.5">
-                  <Upload className="w-4 h-4 text-amber-600" />
-                  <span>Téléverser une image de page</span>
-                </h3>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => e.target.files && setExtractImageFile(e.target.files[0])}
-                  className="w-full text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-slate-950"
-                />
+              {editingLevelId && (
                 <button
-                  type="button"
-                  onClick={handleUploadExtractPageImage}
-                  disabled={!extractImageFile || isUploadingExtractPage}
-                  className="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:bg-slate-200 text-white font-bold text-xs transition-colors"
+                  onClick={handleCancelEditLevel}
+                  className="text-xs font-semibold text-rose-600 hover:text-rose-700"
                 >
-                  {isUploadingExtractPage ? 'Téléversement...' : 'Ajouter cette page à l\'extrait'}
+                  Annuler
                 </button>
-              </div>
-
-              {/* Bouton de test direct */}
-              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 flex flex-col justify-between">
-                <div>
-                  <h3 className="font-bold text-xs text-amber-900">Tester le Flipbook interactif</h3>
-                  <p className="text-[11px] text-amber-700 mt-1">
-                    Visualisez immédiatement le rendu de l'ouvrage avec rotation 3D des pages et le son de papier.
-                  </p>
-                </div>
-                {selectedExtractBookId && (
-                  <button
-                    onClick={() => {
-                      const found = books.find((b) => b.id === selectedExtractBookId);
-                      if (found) setFlipbookBook(found);
-                    }}
-                    className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-colors mt-3"
-                  >
-                    <Eye className="w-4 h-4" />
-                    <span>Lancer la liseuse Flipbook</span>
-                  </button>
-                )}
-              </div>
+              )}
             </div>
 
-            {/* Édition directe de la liste des pages */}
-            <div className="space-y-2">
-              <label className="block text-xs font-bold text-slate-700">
-                2. Liste des URLs des pages de l'extrait (une URL par ligne) :
-              </label>
-              <textarea
-                rows={5}
-                value={extractPagesInput}
-                onChange={(e) => setExtractPagesInput(e.target.value)}
-                placeholder="/covers/code-d-acces-annale-hg-3e.png&#10;https://.../page1.jpg&#10;https://.../page2.jpg"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-mono focus:outline-hidden focus:border-amber-600"
-              />
+            <form onSubmit={handleSaveLevel} className="space-y-4 text-xs">
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Nom du Niveau / Classe *</label>
+                <input
+                  type="text"
+                  required
+                  value={levelForm.name}
+                  onChange={(e) => setLevelForm({ ...levelForm, name: e.target.value })}
+                  placeholder="Ex : 3ème (BEPC), Terminale (BAC), 6ème..."
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-hidden focus:border-amber-600 font-semibold"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Cycle Scolaire</label>
+                  <select
+                    value={levelForm.cycle}
+                    onChange={(e) => setLevelForm({ ...levelForm, cycle: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-hidden focus:border-amber-600 bg-white"
+                  >
+                    <option value="Collège">Collège (Premier cycle)</option>
+                    <option value="Lycée">Lycée (Second cycle)</option>
+                    <option value="Enseignement Technique">Enseignement Technique</option>
+                    <option value="Général">Général / Tout public</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Ordre de tri</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={levelForm.order_index}
+                    onChange={(e) => setLevelForm({ ...levelForm, order_index: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-hidden focus:border-amber-600 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Description / Précisions</label>
+                <textarea
+                  rows={2}
+                  value={levelForm.description}
+                  onChange={(e) => setLevelForm({ ...levelForm, description: e.target.value })}
+                  placeholder="Ex : Classe d'examen du Brevet d'Études du Premier Cycle..."
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-hidden focus:border-amber-600"
+                />
+              </div>
+
               <button
-                type="button"
-                onClick={handleSaveExtractPages}
-                className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 shadow-sm transition-colors"
+                type="submit"
+                className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold flex items-center justify-center gap-1.5 shadow-sm transition-colors"
               >
                 <CheckCircle2 className="w-4 h-4" />
-                <span>Enregistrer les pages de cet extrait</span>
+                <span>{editingLevelId ? 'Enregistrer les modifications' : 'Ajouter le niveau'}</span>
               </button>
+            </form>
+          </div>
+
+          {/* Liste des Niveaux */}
+          <div className="lg:col-span-7 bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
+            <div className="p-5 border-b border-slate-100">
+              <h2 className="text-base font-bold text-slate-900">
+                Niveaux et Classes Définis ({levels.length})
+              </h2>
+            </div>
+
+            <div className="divide-y divide-slate-100">
+              {levels.map((lvl) => (
+                <div key={lvl.id} className="p-4 flex items-center justify-between gap-4 hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <span className="w-7 h-7 rounded-lg bg-blue-50 text-blue-800 font-mono font-bold text-xs flex items-center justify-center shrink-0">
+                      {lvl.order_index ?? '-'}
+                    </span>
+                    <div>
+                      <h3 className="font-bold text-sm text-slate-900">
+                        {lvl.name} {lvl.cycle ? <span className="text-xs font-normal text-slate-500">({lvl.cycle})</span> : ''}
+                      </h3>
+                      {lvl.description && (
+                        <p className="text-xs text-slate-500 mt-0.5">{lvl.description}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => handleEditLevel(lvl)}
+                      className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+                      title="Modifier"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteLevel(lvl.id, lvl.name)}
+                      className="p-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors"
+                      title="Supprimer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       )}
 
       {/* ===================================================================== */}
-      {/* ONGLET 3 : COLLECTIONS                                                */}
+      {/* ONGLET 3 : RUBRIQUES & TEXTES DU SITE (CRUD)                          */}
+      {/* ===================================================================== */}
+      {activeTab === 'sections' && (
+        <div className="space-y-8">
+          {/* Formulaire de modification de la rubrique active */}
+          {editingSectionKey ? (
+            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <LayoutTemplate className="w-4 h-4 text-purple-600" />
+                  <span>Modifier la Rubrique : <code className="text-amber-800 font-mono">{sectionForm.section_key}</code></span>
+                </h2>
+                <button
+                  onClick={() => setEditingSectionKey(null)}
+                  className="text-xs font-semibold text-rose-600 hover:text-rose-700"
+                >
+                  Fermer
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveSection} className="space-y-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Titre Principal de la Rubrique *</label>
+                    <input
+                      type="text"
+                      required
+                      value={sectionForm.title}
+                      onChange={(e) => setSectionForm({ ...sectionForm, title: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-hidden focus:border-amber-600 font-semibold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Texte de Bannière / Badge</label>
+                    <input
+                      type="text"
+                      value={sectionForm.banner_text}
+                      onChange={(e) => setSectionForm({ ...sectionForm, banner_text: e.target.value })}
+                      placeholder="Ex : Ressource 100% Gratuite"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-hidden focus:border-amber-600"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Sous-titre / Description Courte</label>
+                  <textarea
+                    rows={2}
+                    value={sectionForm.subtitle}
+                    onChange={(e) => setSectionForm({ ...sectionForm, subtitle: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-hidden focus:border-amber-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Texte Détaillé / Contenu</label>
+                  <textarea
+                    rows={4}
+                    value={sectionForm.content}
+                    onChange={(e) => setSectionForm({ ...sectionForm, content: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-hidden focus:border-amber-600 font-sans"
+                  />
+                </div>
+
+                <div className="flex items-center gap-4 pt-2">
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold flex items-center gap-1.5 shadow-sm transition-colors"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Enregistrer les textes de cette rubrique</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditingSectionKey(null)}
+                    className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold"
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </form>
+            </div>
+          ) : null}
+
+          {/* Liste des Rubriques du site */}
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
+            <div className="p-5 border-b border-slate-100">
+              <h2 className="text-base font-bold text-slate-900">
+                Rubriques et Textes Paramétrables du Site
+              </h2>
+              <p className="text-xs text-slate-500">
+                Personnalisez les titres, sous-titres et messages affichés dans chaque section du site.
+              </p>
+            </div>
+
+            <div className="divide-y divide-slate-100">
+              {sections.map((sec) => (
+                <div key={sec.section_key} className="p-5 flex flex-col sm:flex-row sm:items-start justify-between gap-4 hover:bg-slate-50 transition-colors">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-sm">
+                        {sec.section_key}
+                      </span>
+                      {sec.banner_text && (
+                        <span className="text-[10px] bg-emerald-50 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
+                          {sec.banner_text}
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="font-bold text-sm text-slate-900">{sec.title}</h3>
+                    {sec.subtitle && (
+                      <p className="text-xs text-slate-600 max-w-2xl">{sec.subtitle}</p>
+                    )}
+                    {sec.content && (
+                      <p className="text-xs text-slate-400 line-clamp-2 max-w-2xl mt-1">{sec.content}</p>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => handleEditSection(sec)}
+                    className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center gap-1.5 transition-colors shrink-0"
+                  >
+                    <Edit3 className="w-3.5 h-3.5 text-amber-700" />
+                    <span>Modifier les textes</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* ONGLET 4 : COLLECTIONS                                                */}
       {/* ===================================================================== */}
       {activeTab === 'collections' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -1110,7 +1375,7 @@ export default function AdminDashboardPage() {
       )}
 
       {/* ===================================================================== */}
-      {/* ONGLET 4 : MATIÈRES / DISCIPLINES                                     */}
+      {/* ONGLET 5 : MATIÈRES / DISCIPLINES                                     */}
       {/* ===================================================================== */}
       {activeTab === 'disciplines' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -1208,7 +1473,7 @@ export default function AdminDashboardPage() {
       )}
 
       {/* ===================================================================== */}
-      {/* ONGLET 5 : CORRIGÉS GRATUITS                                          */}
+      {/* ONGLET 6 : CORRIGÉS GRATUITS                                          */}
       {/* ===================================================================== */}
       {activeTab === 'corriges' && (
         <div className="space-y-8">
@@ -1267,19 +1532,15 @@ export default function AdminDashboardPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Niveau *</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Niveau / Classe *</label>
                   <select
                     value={corrigeForm.level}
                     onChange={(e) => setCorrigeForm({ ...corrigeForm, level: e.target.value })}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs bg-white"
                   >
-                    <option value="6ème">6ème</option>
-                    <option value="5ème">5ème</option>
-                    <option value="4ème">4ème</option>
-                    <option value="3ème (BEPC)">3ème (BEPC)</option>
-                    <option value="2nde">Seconde</option>
-                    <option value="1ère">Première</option>
-                    <option value="Terminale (BAC)">Terminale (BAC)</option>
+                    {levels.map((lvl) => (
+                      <option key={lvl.id} value={lvl.name}>{lvl.name}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -1345,7 +1606,7 @@ export default function AdminDashboardPage() {
       )}
 
       {/* ===================================================================== */}
-      {/* ONGLET 6 : COMMANDES & REVENDEURS                                     */}
+      {/* ONGLET 7 : COMMANDES & REVENDEURS                                     */}
       {/* ===================================================================== */}
       {activeTab === 'orders' && (
         <div className="space-y-6">
@@ -1476,14 +1737,6 @@ export default function AdminDashboardPage() {
             </div>
           )}
         </div>
-      )}
-
-      {/* Modal Flipbook Preview si activé */}
-      {flipbookBook && (
-        <BookFlipbook
-          book={flipbookBook}
-          onClose={() => setFlipbookBook(null)}
-        />
       )}
     </div>
   );

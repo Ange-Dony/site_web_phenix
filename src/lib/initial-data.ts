@@ -1,4 +1,4 @@
-import { Book, Corrige, SiteSettings, CollectionItem, DisciplineItem } from '@/types';
+import { Book, Corrige, SiteSettings, CollectionItem, DisciplineItem, LevelItem, SectionContent } from '@/types';
 
 export const INITIAL_SETTINGS: SiteSettings = {
   site_name: 'Les Éditions Phénix',
@@ -613,5 +613,58 @@ export const INITIAL_DISCIPLINES: DisciplineItem[] = [
   { id: 'disc-6', name: 'Français', description: 'Grammaire, orthographe, dictée, commentaire et contraction de texte' },
   { id: 'disc-7', name: 'Sciences de la Vie et de la Terre (SVT)', description: 'Biologie, géologie et sciences environnementales' },
   { id: 'disc-8', name: 'Communication & Commerce (CMC)', description: 'Filières tertiaires, correspondance commerciale et gestion' },
-  { id: 'disc-9', name: 'Littérature & Romans', description: 'Œuvres littéraires, théâtre et poésie' },
+  { id: 'disc-9', name: 'Civisme & EDHC', description: 'Éducation aux droits de l\'homme et à la citoyenneté' },
+  { id: 'disc-10', name: 'Littérature & Romans', description: 'Œuvres littéraires, théâtre et poésie' },
 ];
+
+export const INITIAL_LEVELS: LevelItem[] = [
+  { id: 'lvl-1', name: '6ème', cycle: 'Collège', order_index: 1 },
+  { id: 'lvl-2', name: '5ème', cycle: 'Collège', order_index: 2 },
+  { id: 'lvl-3', name: '4ème', cycle: 'Collège', order_index: 3 },
+  { id: 'lvl-4', name: '3ème (BEPC)', cycle: 'Collège', order_index: 4 },
+  { id: 'lvl-5', name: '2nde', cycle: 'Lycée', order_index: 5 },
+  { id: 'lvl-6', name: '1ère', cycle: 'Lycée', order_index: 6 },
+  { id: 'lvl-7', name: 'Terminale (BAC)', cycle: 'Lycée', order_index: 7 },
+  { id: 'lvl-8', name: 'Collège & Lycée', cycle: 'Secondaire', order_index: 8 },
+  { id: 'lvl-9', name: 'Tout public', cycle: 'Général', order_index: 9 },
+];
+
+export const INITIAL_SECTIONS: SectionContent[] = [
+  {
+    id: 'sec-hero',
+    section_key: 'hero',
+    badge: 'Les Éditions Phénix — La Maison du Succès',
+    title: 'La Maison du Succès pour vos Examens et Évaluations',
+    subtitle: 'Découvrez les cahiers d\'activités d\'évaluation, annales méthodologiques (BEPC, BAC), guides pratiques et créations littéraires de Les Éditions Phénix.',
+    description: 'Explorez la Collection Archives et toutes nos séries conformes aux programmes officiels.',
+  },
+  {
+    id: 'sec-catalogue',
+    section_key: 'catalogue',
+    badge: 'Catalogue Officiel — La Maison du Succès',
+    title: 'Nos Activités d\'Évaluation, Annales & Guides',
+    subtitle: 'Explorez l\'ensemble des titres édités par Les Éditions Phénix : cahiers d\'activités d\'évaluation, guides méthodologiques, annales d\'examens (BEPC, BAC) et œuvres littéraires.',
+  },
+  {
+    id: 'sec-corriges',
+    section_key: 'corriges',
+    badge: 'Ressource 100% Gratuite',
+    title: 'Téléchargez Librement les Corrigés Officiels',
+    subtitle: 'Pour soutenir les élèves et les enseignants, Les Éditions Phénix mettent à disposition les corrigés complets de tous les devoirs et annales au format PDF et Word.',
+  },
+  {
+    id: 'sec-revendeurs',
+    section_key: 'revendeurs',
+    badge: 'Espace Professionnel • Librairies, Écoles & Grossistes',
+    title: 'Bon de Commande & Point des Documents',
+    subtitle: 'Bienvenue dans l\'espace réservé aux établissements scolaires, librairies partenaires et revendeurs des Éditions Phénix. Transmettez directement votre bordereau de commande sans intermédiaire.',
+  },
+  {
+    id: 'sec-apropos',
+    section_key: 'a_propos',
+    badge: 'Les Éditions Phénix — La Maison du Succès',
+    title: 'La Maison du Succès : Élever le Savoir et Réussir les Examens',
+    subtitle: 'Fondée avec la passion d\'instruire et d\'élever, Les Éditions Phénix conçoivent des outils d\'apprentissage pragmatiques pour les élèves, enseignants et passionnés de lettres.',
+  },
+];
+

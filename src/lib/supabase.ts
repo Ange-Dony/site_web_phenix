@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
-import { Book, Corrige, SiteSettings, Order, CollectionItem, DisciplineItem, ResellerOrder } from '@/types';
-import { INITIAL_BOOKS, INITIAL_CORRIGES, INITIAL_SETTINGS, INITIAL_COLLECTIONS, INITIAL_DISCIPLINES } from './initial-data';
+import { Book, Corrige, SiteSettings, Order, CollectionItem, DisciplineItem, ResellerOrder, LevelItem, SectionContent } from '@/types';
+import { INITIAL_BOOKS, INITIAL_CORRIGES, INITIAL_SETTINGS, INITIAL_COLLECTIONS, INITIAL_DISCIPLINES, INITIAL_LEVELS, INITIAL_SECTIONS } from './initial-data';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -19,21 +19,30 @@ export const supabase = isSupabaseConfigured
 // FONCTIONS LIVRES (BOOKS)
 // ==========================================
 export async function getBooks(): Promise<Book[]> {
-  if (!supabase) return getLocalOrInitialBooks();
+  if (!supabase) return getSortedBooks(getLocalOrInitialBooks());
 
   try {
     const { data, error } = await supabase
       .from('books')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('order_index', { ascending: true, nullsFirst: false });
 
     if (error || !data || data.length === 0) {
-      return getLocalOrInitialBooks();
+      return getSortedBooks(getLocalOrInitialBooks());
     }
-    return data as Book[];
+    return getSortedBooks(data as Book[]);
   } catch {
-    return getLocalOrInitialBooks();
+    return getSortedBooks(getLocalOrInitialBooks());
   }
+}
+
+function getSortedBooks(books: Book[]): Book[] {
+  return [...books].sort((a, b) => {
+    const orderA = a.order_index ?? 9999;
+    const orderB = b.order_index ?? 9999;
+    if (orderA !== orderB) return orderA - orderB;
+    return (a.title || '').localeCompare(b.title || '');
+  });
 }
 
 function getLocalOrInitialBooks(): Book[] {
@@ -78,6 +87,20 @@ export async function updateBook(id: string, updates: Partial<Book>): Promise<bo
   if (typeof window !== 'undefined') {
     const books = getLocalOrInitialBooks().map((b) => b.id === id ? { ...b, ...updates } : b);
     localStorage.setItem('phenix_custom_books', JSON.stringify(books));
+  }
+  return true;
+}
+
+export async function saveAllBooks(books: Book[]): Promise<boolean> {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('phenix_custom_books', JSON.stringify(books));
+  }
+  if (supabase) {
+    try {
+      for (const b of books) {
+        await supabase.from('books').upsert(b);
+      }
+    } catch {}
   }
   return true;
 }
@@ -209,6 +232,133 @@ export async function deleteDiscipline(id: string): Promise<boolean> {
   if (supabase) {
     try {
       await supabase.from('disciplines').delete().eq('id', id);
+    } catch {}
+  }
+  return true;
+}
+
+// ==========================================
+// FONCTIONS NIVEAUX / CLASSES (LEVELS)
+// ==========================================
+export async function getLevels(): Promise<LevelItem[]> {
+  if (typeof window !== 'undefined') {
+    const local = localStorage.getItem('phenix_levels');
+    if (local) {
+      try {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch {}
+    }
+  }
+
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('levels')
+        .select('*')
+        .order('order_index', { ascending: true });
+      if (!error && data && data.length > 0) {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('phenix_levels', JSON.stringify(data));
+        }
+        return data as LevelItem[];
+      }
+    } catch {}
+  }
+
+  return INITIAL_LEVELS;
+}
+
+export async function saveLevel(level: LevelItem): Promise<boolean> {
+  let list = await getLevels();
+  const existingIdx = list.findIndex(l => l.id === level.id);
+  if (existingIdx >= 0) {
+    list[existingIdx] = level;
+  } else {
+    list.push(level);
+  }
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('phenix_levels', JSON.stringify(list));
+  }
+
+  if (supabase) {
+    try {
+      await supabase.from('levels').upsert(level);
+    } catch {}
+  }
+  return true;
+}
+
+export async function deleteLevel(id: string): Promise<boolean> {
+  let list = await getLevels();
+  list = list.filter(l => l.id !== id);
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('phenix_levels', JSON.stringify(list));
+  }
+
+  if (supabase) {
+    try {
+      await supabase.from('levels').delete().eq('id', id);
+    } catch {}
+  }
+  return true;
+}
+
+// ==========================================
+// FONCTIONS RUBRIQUES / CONTENUS DE PAGES (SECTIONS)
+// ==========================================
+export async function getSectionContents(): Promise<SectionContent[]> {
+  if (typeof window !== 'undefined') {
+    const local = localStorage.getItem('phenix_sections');
+    if (local) {
+      try {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch {}
+    }
+  }
+
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('section_contents')
+        .select('*')
+        .order('section_key', { ascending: true });
+      if (!error && data && data.length > 0) {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('phenix_sections', JSON.stringify(data));
+        }
+        return data as SectionContent[];
+      }
+    } catch {}
+  }
+
+  return INITIAL_SECTIONS;
+}
+
+export async function getSectionContentByKey(key: string): Promise<SectionContent | null> {
+  const sections = await getSectionContents();
+  return sections.find(s => s.section_key === key) || null;
+}
+
+export async function saveSectionContent(section: SectionContent): Promise<boolean> {
+  let list = await getSectionContents();
+  const existingIdx = list.findIndex(s => s.section_key === section.section_key);
+  if (existingIdx >= 0) {
+    list[existingIdx] = { ...section, updated_at: new Date().toISOString() };
+  } else {
+    list.push({ ...section, updated_at: new Date().toISOString() });
+  }
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('phenix_sections', JSON.stringify(list));
+  }
+
+  if (supabase) {
+    try {
+      await supabase.from('section_contents').upsert(section);
     } catch {}
   }
   return true;

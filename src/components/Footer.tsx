@@ -85,11 +85,6 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/extraits" className="flex items-center gap-1.5 text-amber-300 font-semibold hover:text-amber-200">
-                  <BookOpen className="w-3.5 h-3.5" /> Extraits & Flipbook 3D
-                </Link>
-              </li>
-              <li>
                 <Link href="/corriges" className="flex items-center gap-1.5 text-emerald-300 font-semibold hover:text-emerald-200">
                   <Download className="w-3.5 h-3.5" /> Corrigés Gratuits (PDF / Word)
                 </Link>

@@ -2,7 +2,8 @@ export interface Book {
   id: string;
   title: string;
   slug: string;
-  author?: string; // Facultatif selon la demande
+  subtitle?: string;
+  author?: string; // Facultatif
   category: string;
   collection?: string;
   discipline?: string; // Matière / Discipline
@@ -10,13 +11,16 @@ export interface Book {
   description: string;
   price: number;
   old_price?: number | null;
+  currency?: string;
   cover_url: string;
+  cover_image?: string;
   isbn?: string;
   page_count?: number;
   published_year?: number;
   is_featured?: boolean;
   in_stock?: boolean;
-  extract_pages?: string[]; // Liste des URLs d'images pour le feuilletage Flipbook
+  order_index?: number; // Ordre d'affichage défini par l'administrateur
+  extract_pages?: string[];
   created_at?: string;
 }
 
@@ -33,12 +37,14 @@ export interface Corrige {
   file_type: 'pdf' | 'docx' | 'doc';
   file_size?: string;
   download_count?: number;
+  is_free?: boolean;
   created_at?: string;
 }
 
 export interface CollectionItem {
   id: string;
   name: string;
+  slug?: string;
   description?: string;
   color?: string;
   created_at?: string;
@@ -47,8 +53,32 @@ export interface CollectionItem {
 export interface DisciplineItem {
   id: string;
   name: string;
+  slug?: string;
   description?: string;
   created_at?: string;
+}
+
+export interface LevelItem {
+  id: string;
+  name: string;
+  cycle?: string; // Collège, Lycée, Supérieur, etc.
+  order_index?: number;
+  description?: string;
+  created_at?: string;
+}
+
+export interface SectionContent {
+  id?: string;
+  section_key: string; // 'hero', 'catalogue', 'corriges', 'revendeurs', 'a_propos'
+  title: string;
+  subtitle?: string;
+  description?: string;
+  badge?: string;
+  content?: string;
+  banner_text?: string;
+  order_index?: number;
+  is_visible?: boolean;
+  updated_at?: string;
 }
 
 export interface CartItem {
@@ -80,23 +110,22 @@ export interface Order {
   items: CartItem[];
   total_amount: number;
   currency: string;
-  status: 'en_attente' | 'confirmee' | 'livree' | 'annulee';
+  status?: 'en_attente' | 'validee' | 'livree' | 'annulee';
   created_at?: string;
 }
 
 export interface ResellerOrderItem {
   book_id: string;
   title: string;
-  collection?: string;
-  discipline?: string;
-  level?: string;
   quantity: number;
+  level?: string;
+  collection?: string;
 }
 
 export interface ResellerOrder {
   id?: string;
   order_code: string;
-  company_name: string;
+  company_name: string; // Librairie ou Établissement
   contact_name: string;
   phone: string;
   email?: string;
@@ -105,6 +134,6 @@ export interface ResellerOrder {
   notes?: string;
   items: ResellerOrderItem[];
   total_copies: number;
-  status: 'en_attente' | 'confirmee' | 'traitee' | 'annulee';
+  status?: string;
   created_at?: string;
 }

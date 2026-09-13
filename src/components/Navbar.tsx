@@ -20,10 +20,9 @@ export default function Navbar() {
   const pathname = usePathname();
   const { totalItems, setIsCartOpen } = useCart();
 
-  const navLinks = [
+  const navLinks: { name: string; href: string; highlight?: boolean }[] = [
     { name: 'Accueil', href: '/' },
     { name: 'Catalogue', href: '/catalogue' },
-    { name: 'Extraits Flipbook', href: '/extraits', highlight: true },
     { name: 'Corrigés', href: '/corriges' },
     { name: 'Espace Revendeurs', href: '/revendeurs' },
     { name: 'À Propos', href: '/a-propos' },

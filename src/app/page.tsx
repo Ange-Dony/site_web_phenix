@@ -4,165 +4,71 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   BookOpen, 
-  Download, 
-  Phone, 
   ArrowRight, 
   CheckCircle2, 
   Sparkles, 
-  GraduationCap, 
-  Search,
-  BookMarked,
-  ShieldCheck,
-  TrendingUp,
-  FileText,
+  Eye,
   ChevronLeft,
   ChevronRight,
-  Eye
+  ShoppingCart,
+  PhoneCall
 } from 'lucide-react';
 import BookCard from '@/components/BookCard';
-import BookFlipbook from '@/components/BookFlipbook';
-import { INITIAL_BOOKS, INITIAL_CORRIGES } from '@/lib/initial-data';
-import { Book } from '@/types';
+import { INITIAL_BOOKS } from '@/lib/initial-data';
+import { getBooks, getSectionContentByKey } from '@/lib/supabase';
+import { Book, SectionContent } from '@/types';
 
 export default function HomePage() {
+  const [books, setBooks] = useState<Book[]>(INITIAL_BOOKS);
+  const [heroSection, setHeroSection] = useState<SectionContent | null>(null);
   const [activeCollection, setActiveCollection] = useState('all');
-  const [flipbookBook, setFlipbookBook] = useState<Book | null>(null);
 
-  // Définition ordonnée stricte des 7 collections demandées :
-  // Archives → École et Métiers → Jeune Citoyen → Succès → Polyglotte → Racines → Papyrus
-  const heroCarouselSlides = [
-    {
-      id: 'col-archives',
-      collectionName: 'Collection Archives',
-      shortName: 'Archives',
-      title: 'Histoire-Géographie 3ème - Activités d\'Évaluation & Exercices',
-      subtitle: 'Cahiers d\'Activités d\'Évaluation & Situations d\'Apprentissage',
-      badge: 'Histoire-Géo • Approche APC',
-      level: 'Classe de 3ème (BEPC)',
-      price: '4 800 FCFA',
-      cover: '/covers/hg-couverture-3e-1ere-couv.webp',
-      color: 'from-blue-600/30 to-indigo-950/80 border-blue-500/40',
-      tagColor: 'bg-blue-500 text-white',
-      slug: 'hg-manuel-3e',
-      bookId: 'b10',
-    },
-    {
-      id: 'col-ecole-metiers',
-      collectionName: 'Collection École et Métiers',
-      shortName: 'École et Métiers',
-      title: 'Communication & Méthodes Commerciales (CMC) Terminale',
-      subtitle: 'Filières Professionnelles & Techniques Tertiaires',
-      badge: 'Filières Tertiaires • BAC G1 / G2 / AB',
-      level: 'Terminale Technique',
-      price: '6 000 FCFA',
-      cover: '/covers/couverture-cmc-tle-1ere-couv.webp',
-      color: 'from-teal-600/30 to-slate-950/80 border-teal-500/40',
-      tagColor: 'bg-teal-500 text-white',
-      slug: 'couverture-cmc-tle',
-      bookId: 'b22',
-    },
-    {
-      id: 'col-jeune-citoyen',
-      collectionName: 'Collection Jeune Citoyen',
-      shortName: 'Jeune Citoyen',
-      title: 'Éducation aux Droits de l\'Homme et Citoyenneté (EDHC)',
-      subtitle: 'Guide Pratique du Jeune Citoyen Responsable',
-      badge: 'EDHC • Citoyenneté & Paix',
-      level: 'Collège & Lycée',
-      price: '3 500 FCFA',
-      cover: '/covers/code-d-acces-annale-hg-3e.png',
-      color: 'from-amber-600/30 to-orange-950/80 border-amber-500/40',
-      tagColor: 'bg-amber-500 text-slate-950',
-      slug: 'edhc-guide-jeune-citoyen',
-      bookId: 'b24',
-    },
-    {
-      id: 'col-succes',
-      collectionName: 'Collection Succès',
-      shortName: 'Succès',
-      title: 'Code d\'Accès - Annale Histoire-Géographie Terminale (BAC)',
-      subtitle: 'Annales Officielles & Sujets Types Commentés',
-      badge: 'Annales d\'Examen • Baccalauréat',
-      level: 'Terminale BAC (Toutes séries)',
-      price: '5 000 FCFA',
-      cover: '/covers/code-d-acces-annale-hg-tle.png',
-      color: 'from-amber-500/30 to-slate-950/80 border-amber-400/40',
-      tagColor: 'bg-amber-400 text-slate-950',
-      slug: 'code-acces-annale-hg-tle',
-      bookId: 'b2',
-    },
-    {
-      id: 'col-polyglotte',
-      collectionName: 'Collection Polyglotte',
-      shortName: 'Polyglotte',
-      title: 'English Oral Skills for BEPC - Audio & Practice',
-      subtitle: 'Guides d\'Anglais & Pratique Intensive de l\'Oral',
-      badge: 'Langues Vivantes • Épreuve Orale',
-      level: '3ème (BEPC)',
-      price: '3 500 FCFA',
-      cover: '/covers/anglais-oral-bepc.png',
-      color: 'from-emerald-600/30 to-teal-950/80 border-emerald-500/40',
-      tagColor: 'bg-emerald-500 text-white',
-      slug: 'anglais-oral-bepc',
-      bookId: 'b14',
-    },
-    {
-      id: 'col-racines',
-      collectionName: 'Collection Racines',
-      shortName: 'Racines',
-      title: 'Dictée - Questions & Analyse de Texte (Collège)',
-      subtitle: 'Maîtrise de la Langue Française & Récits Culturels',
-      badge: 'Français & Dictée • 6e à 3e',
-      level: 'Premier Cycle (Collège)',
-      price: '3 500 FCFA',
-      cover: '/covers/couverture-dq-1ere-couv.webp',
-      color: 'from-rose-600/30 to-red-950/80 border-rose-500/40',
-      tagColor: 'bg-rose-500 text-white',
-      slug: 'couverture-dq-college',
-      bookId: 'b23',
-    },
-    {
-      id: 'col-papyrus',
-      collectionName: 'Collection Papyrus',
-      shortName: 'Papyrus',
-      title: 'Soir d\'un Monde (Roman d\'Aimé C. Tanoh)',
-      subtitle: 'Créations Littéraires & Romans Inspirants',
-      badge: 'Littérature Africaine • Roman',
-      level: 'Lycée & Tout Public',
-      price: '4 500 FCFA',
-      cover: '/covers/soir-d-un-monde.webp',
-      color: 'from-purple-600/30 to-indigo-950/80 border-purple-500/40',
-      tagColor: 'bg-purple-500 text-white',
-      slug: 'soir-dun-monde',
-      bookId: 'b18',
-    },
-  ];
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const loadedBooks = await getBooks();
+        if (loadedBooks && loadedBooks.length > 0) {
+          setBooks(loadedBooks);
+        }
+        const section = await getSectionContentByKey('hero');
+        if (section) {
+          setHeroSection(section);
+        }
+      } catch (e) {
+        console.error('Erreur chargement page accueil:', e);
+      }
+    }
+    loadData();
+  }, []);
+
+  // Filtrer UNIQUEMENT les documents de la "Collection Archives" pour le carrousel principal
+  const archivesBooks = books
+    .filter((b) => b.collection === 'Collection Archives')
+    .sort((a, b) => (a.order_index ?? 999) - (b.order_index ?? 999));
 
   // Carousel State
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
-  // Auto-play du carrousel toutes les 4.5s sauf si souris dessus
+  const totalSlides = archivesBooks.length > 0 ? archivesBooks.length : 1;
+
+  // Auto-play du carrousel toutes les 4.5s sauf si survolé
   useEffect(() => {
-    if (isPaused) return;
+    if (isPaused || archivesBooks.length <= 1) return;
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroCarouselSlides.length);
+      setCurrentSlide((prev) => (prev + 1) % archivesBooks.length);
     }, 4500);
     return () => clearInterval(interval);
-  }, [isPaused, heroCarouselSlides.length]);
+  }, [isPaused, archivesBooks.length]);
 
-  const activeSlide = heroCarouselSlides[currentSlide];
+  const activeBook = archivesBooks[currentSlide] || archivesBooks[0] || books[0];
 
-  // Navigation carrousel
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % heroCarouselSlides.length);
+    setCurrentSlide((prev) => (prev + 1) % totalSlides);
   };
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + heroCarouselSlides.length) % heroCarouselSlides.length);
+    setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
   };
-
-  // Trouver le livre associé au slide actif pour la liseuse Flipbook
-  const currentSlideBook = INITIAL_BOOKS.find((b) => b.id === activeSlide.bookId || b.slug === activeSlide.slug) || INITIAL_BOOKS[0];
 
   // Ordre strict des collections pour le filtre du bas
   const collections = [
@@ -176,14 +82,14 @@ export default function HomePage() {
     { id: 'Collection Papyrus', name: 'Papyrus (Romans)' },
   ];
 
-  const featuredBooks = INITIAL_BOOKS.filter((b) => b.is_featured);
+  const featuredBooks = books.filter((b) => b.is_featured);
   const filteredBooks = activeCollection === 'all' 
     ? featuredBooks 
-    : INITIAL_BOOKS.filter((b) => b.collection === activeCollection);
+    : books.filter((b) => b.collection === activeCollection);
 
   return (
     <div className="space-y-16 sm:space-y-24 pb-16">
-      {/* HERO SECTION AVEC CARROUSEL DES 7 COLLECTIONS */}
+      {/* HERO SECTION AVEC CARROUSEL EXCLUSIF COLLECTION ARCHIVES */}
       <section className="relative overflow-hidden bg-gradient-to-b from-amber-950 via-slate-900 to-slate-950 text-white pt-10 pb-20 sm:py-20">
         {/* Ambient Glows */}
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-600/20 rounded-full blur-3xl pointer-events-none" />
@@ -200,11 +106,15 @@ export default function HomePage() {
               </div>
 
               <h1 className="text-3xl sm:text-5xl lg:text-5xl font-serif font-black tracking-tight leading-[1.15] text-white">
-                La Maison du Succès pour vos Examens et <span className="bg-gradient-to-r from-amber-400 via-amber-200 to-amber-400 bg-clip-text text-transparent">Évaluations</span>.
+                {heroSection?.title || (
+                  <>
+                    La Maison du Succès pour vos Examens et <span className="bg-gradient-to-r from-amber-400 via-amber-200 to-amber-400 bg-clip-text text-transparent">Évaluations</span>.
+                  </>
+                )}
               </h1>
 
               <p className="text-sm sm:text-base text-slate-300 max-w-xl mx-auto lg:mx-0 leading-relaxed font-normal">
-                Explorez nos activités d'évaluation, annales méthodologiques (BEPC, BAC), guides pratiques et créations littéraires. Feuilletez des extraits en 3D et commandez en direct via WhatsApp.
+                {heroSection?.subtitle || "Explorez nos activités d'évaluation, annales méthodologiques (BEPC, BAC), guides pratiques et créations littéraires conçus pour la réussite de chaque élève."}
               </p>
 
               {/* CTAs */}
@@ -219,11 +129,11 @@ export default function HomePage() {
                 </Link>
 
                 <Link
-                  href="/extraits"
-                  className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg shadow-purple-600/25 flex items-center justify-center gap-2 transition-all hover:scale-[1.02]"
+                  href="/corriges"
+                  className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2 transition-all hover:scale-[1.02]"
                 >
                   <Sparkles className="w-4 h-4" />
-                  <span>Feuilleter en 3D (Flipbook)</span>
+                  <span>Corrigés Gratuits</span>
                 </Link>
 
                 <Link
@@ -251,115 +161,135 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Colonne Droite : CARROUSEL HERO DES 7 COLLECTIONS DANS L'ORDRE */}
+            {/* Colonne Droite : CARROUSEL EXCLUSIF DES OUVRAGES DE LA COLLECTION ARCHIVES */}
             <div 
               className="lg:col-span-6 relative flex flex-col items-center"
               onMouseEnter={() => setIsPaused(true)}
               onMouseLeave={() => setIsPaused(false)}
             >
-              {/* Pills Sélecteurs des 7 Collections (Ordre Strict) */}
+              {/* En-tête du carrousel Archives */}
+              <div className="w-full max-w-lg mb-2 flex items-center justify-between px-1">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                  <span className="text-[11px] font-bold text-amber-300 uppercase tracking-wider">
+                    Collection Archives — Histoire-Géographie
+                  </span>
+                </div>
+                <span className="text-[10px] text-slate-400 font-mono">
+                  {currentSlide + 1} / {archivesBooks.length}
+                </span>
+              </div>
+
+              {/* Sélecteurs rapides de niveau pour la collection Archives */}
               <div className="w-full max-w-lg mb-3 flex items-center justify-between gap-1 overflow-x-auto pb-1 scrollbar-none text-[10px] font-bold">
-                {heroCarouselSlides.map((slide, idx) => (
+                {archivesBooks.map((book, idx) => (
                   <button
-                    key={slide.id}
+                    key={book.id}
                     onClick={() => setCurrentSlide(idx)}
-                    className={`px-2 py-1 rounded-md transition-all whitespace-nowrap ${
+                    className={`px-2.5 py-1 rounded-md transition-all whitespace-nowrap ${
                       currentSlide === idx
-                        ? 'bg-amber-400 text-slate-950 font-black shadow-xs scale-105'
-                        : 'bg-slate-800/70 text-slate-400 hover:text-white'
+                        ? 'bg-amber-400 text-slate-950 font-black shadow-sm scale-105'
+                        : 'bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-700'
                     }`}
                   >
-                    {idx + 1}. {slide.shortName}
+                    {book.level}
                   </button>
                 ))}
               </div>
 
-              {/* Carte Slide Active avec effets 3D et Couverture */}
-              <div className="w-full max-w-lg relative bg-slate-900/90 rounded-3xl border border-slate-700/80 p-5 sm:p-7 shadow-2xl overflow-hidden backdrop-blur-md transition-all">
-                {/* Flèches de navigation */}
-                <button
-                  onClick={prevSlide}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-slate-950/80 hover:bg-amber-500 text-white hover:text-slate-950 border border-slate-700 flex items-center justify-center transition-all shadow-md"
-                  aria-label="Collection précédente"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={nextSlide}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-slate-950/80 hover:bg-amber-500 text-white hover:text-slate-950 border border-slate-700 flex items-center justify-center transition-all shadow-md"
-                  aria-label="Collection suivante"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
+              {/* Carte Slide de l'ouvrage actif */}
+              {activeBook && (
+                <div className="w-full max-w-lg relative bg-slate-900/90 rounded-3xl border border-amber-500/30 p-5 sm:p-7 shadow-2xl overflow-hidden backdrop-blur-md transition-all">
+                  {/* Flèches de navigation */}
+                  <button
+                    onClick={prevSlide}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-slate-950/85 hover:bg-amber-500 text-white hover:text-slate-950 border border-slate-700 flex items-center justify-center transition-all shadow-md"
+                    aria-label="Ouvrage précédent"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={nextSlide}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-slate-950/85 hover:bg-amber-500 text-white hover:text-slate-950 border border-slate-700 flex items-center justify-center transition-all shadow-md"
+                    aria-label="Ouvrage suivant"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
 
-                <div className="grid grid-cols-1 sm:grid-cols-12 gap-5 items-center">
-                  {/* Visuel Couverture */}
-                  <div className="sm:col-span-5 flex justify-center">
-                    <div 
-                      onClick={() => setFlipbookBook(currentSlideBook)}
-                      className="relative w-36 sm:w-40 aspect-3/4 rounded-xl overflow-hidden shadow-2xl border-2 border-white/20 cursor-pointer group transform hover:scale-105 transition-transform"
-                    >
-                      <img
-                        src={activeSlide.cover}
-                        alt={activeSlide.title}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span className="p-2 rounded-full bg-amber-500 text-slate-950 shadow-lg">
-                          <Eye className="w-4 h-4" />
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-5 items-center">
+                    {/* Visuel Couverture */}
+                    <div className="sm:col-span-5 flex justify-center">
+                      <Link 
+                        href={`/catalogue/${activeBook.slug}`}
+                        className="relative w-36 sm:w-40 aspect-3/4 rounded-xl overflow-hidden shadow-2xl border-2 border-amber-500/40 cursor-pointer group transform hover:scale-105 transition-transform"
+                      >
+                        <img
+                          src={activeBook.cover_image}
+                          alt={activeBook.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <span className="p-2 rounded-full bg-amber-500 text-slate-950 shadow-lg">
+                            <Eye className="w-4 h-4" />
+                          </span>
+                        </div>
+                      </Link>
+                    </div>
+
+                    {/* Détails de l'Ouvrage */}
+                    <div className="sm:col-span-7 space-y-2.5 text-left">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-sm bg-amber-500 text-slate-950">
+                          {activeBook.level}
                         </span>
+                        <span className="text-[10px] font-mono text-amber-300">
+                          {activeBook.discipline}
+                        </span>
+                      </div>
+
+                      <h3 className="text-xs font-mono font-bold text-amber-400 uppercase tracking-wider">
+                        {activeBook.collection}
+                      </h3>
+
+                      <h4 className="text-sm sm:text-base font-bold text-white leading-snug line-clamp-2">
+                        {activeBook.title}
+                      </h4>
+
+                      <p className="text-[11px] text-slate-300 line-clamp-2">
+                        {activeBook.subtitle || activeBook.description}
+                      </p>
+
+                      <div className="text-base font-black text-amber-400 pt-1">
+                        {activeBook.price.toLocaleString('fr-FR')} {activeBook.currency}
+                      </div>
+
+                      <div className="pt-2 flex flex-wrap items-center gap-2">
+                        <Link
+                          href={`/catalogue/${activeBook.slug}`}
+                          className="py-2 px-3.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
+                        >
+                          <BookOpen className="w-3.5 h-3.5" />
+                          <span>Voir les détails</span>
+                        </Link>
+
+                        <Link
+                          href={`/commande?book=${activeBook.id}`}
+                          className="py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs flex items-center gap-1 transition-colors"
+                        >
+                          <ShoppingCart className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Commander</span>
+                        </Link>
                       </div>
                     </div>
                   </div>
 
-                  {/* Infos de la Collection et de l'Ouvrage */}
-                  <div className="sm:col-span-7 space-y-2.5 text-left">
-                    <div className="flex items-center gap-2">
-                      <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-sm ${activeSlide.tagColor}`}>
-                        {activeSlide.badge}
-                      </span>
-                      <span className="text-[10px] font-mono text-amber-300">
-                        {currentSlide + 1} / {heroCarouselSlides.length}
-                      </span>
-                    </div>
-
-                    <h3 className="text-xs font-mono font-bold text-amber-400 uppercase tracking-wider">
-                      {activeSlide.collectionName}
-                    </h3>
-
-                    <h4 className="text-sm sm:text-base font-bold text-white leading-snug line-clamp-2">
-                      {activeSlide.title}
-                    </h4>
-
-                    <p className="text-[11px] text-slate-300 line-clamp-2">
-                      {activeSlide.subtitle}
-                    </p>
-
-                    <div className="pt-2 flex flex-wrap items-center gap-2">
-                      <button
-                        onClick={() => setFlipbookBook(currentSlideBook)}
-                        className="py-1.5 px-3 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
-                      >
-                        <BookOpen className="w-3.5 h-3.5" />
-                        <span>Feuilleter en 3D</span>
-                      </button>
-
-                      <Link
-                        href={`/catalogue?collection=${encodeURIComponent(activeSlide.collectionName)}`}
-                        className="py-1.5 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs transition-colors"
-                      >
-                        Voir la collection
-                      </Link>
-                    </div>
+                  {/* Progress bar indicateur en bas de carte */}
+                  <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-400">
+                    <span>Cahiers d'Activités d'Évaluation & Situations d'Apprentissage</span>
+                    <span className="font-mono text-amber-400">{currentSlide + 1} / {archivesBooks.length}</span>
                   </div>
                 </div>
-
-                {/* Progress bar indicateur en bas de carte */}
-                <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-400">
-                  <span>Ordre officiel : Archives → École et Métiers → Jeune Citoyen → Succès → Polyglotte → Racines → Papyrus</span>
-                  <span className="font-mono text-amber-400">{currentSlide + 1}/7</span>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -387,7 +317,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* EXPLORER PAR COLLECTION (MÊME ORDRE STRICT) */}
+      {/* EXPLORER PAR COLLECTION (ORDRE STRICT DES 7 COLLECTIONS) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
@@ -402,7 +332,7 @@ export default function HomePage() {
             href="/catalogue"
             className="text-xs font-bold text-amber-800 hover:text-amber-900 flex items-center gap-1 group"
           >
-            <span>Voir tout le catalogue ({INITIAL_BOOKS.length} parutions)</span>
+            <span>Voir tout le catalogue ({books.length} parutions)</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
@@ -453,23 +383,15 @@ export default function HomePage() {
                 Accéder aux Corrigés
               </Link>
               <Link
-                href="/extraits"
+                href="/catalogue"
                 className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/20 transition-all"
               >
-                Feuilleter des extraits
+                Consulter les Ouvrages
               </Link>
             </div>
           </div>
         </div>
       </section>
-
-      {/* Liseuse Flipbook si activée depuis le carrousel */}
-      {flipbookBook && (
-        <BookFlipbook
-          book={flipbookBook}
-          onClose={() => setFlipbookBook(null)}
-        />
-      )}
     </div>
   );
 }

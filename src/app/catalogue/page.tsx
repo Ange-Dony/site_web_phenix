@@ -1,37 +1,41 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Filter, BookOpen, SlidersHorizontal } from 'lucide-react';
+import { Search, Filter, BookOpen } from 'lucide-react';
 import BookCard from '@/components/BookCard';
-import { INITIAL_BOOKS } from '@/lib/initial-data';
-import { getBooks } from '@/lib/supabase';
-import { Book } from '@/types';
+import { INITIAL_BOOKS, INITIAL_COLLECTIONS, INITIAL_LEVELS } from '@/lib/initial-data';
+import { getBooks, getCollections, getLevels } from '@/lib/supabase';
+import { Book, CollectionItem, LevelItem } from '@/types';
 
 export default function CataloguePage() {
   const [books, setBooks] = useState<Book[]>(INITIAL_BOOKS);
+  const [collectionsList, setCollectionsList] = useState<CollectionItem[]>(INITIAL_COLLECTIONS);
+  const [levelsList, setLevelsList] = useState<LevelItem[]>(INITIAL_LEVELS);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCollection, setSelectedCollection] = useState('all');
   const [selectedLevel, setSelectedLevel] = useState('all');
   const [sortBy, setSortBy] = useState('default');
 
   useEffect(() => {
-    getBooks().then((data) => {
-      if (data && data.length > 0) setBooks(data);
-    });
+    async function loadData() {
+      try {
+        const [loadedBooks, loadedCollections, loadedLevels] = await Promise.all([
+          getBooks(),
+          getCollections(),
+          getLevels()
+        ]);
+        if (loadedBooks && loadedBooks.length > 0) setBooks(loadedBooks);
+        if (loadedCollections && loadedCollections.length > 0) setCollectionsList(loadedCollections);
+        if (loadedLevels && loadedLevels.length > 0) setLevelsList(loadedLevels);
+      } catch (err) {
+        console.error('Erreur chargement catalogue:', err);
+      }
+    }
+    loadData();
   }, []);
 
-  const collections = [
-    { id: 'all', name: 'Toutes les collections' },
-    { id: 'Collection Archives', name: 'Collection Archives (Histoire-Géo)' },
-    { id: 'Collection École et Métiers', name: 'Collection École et Métiers (CMC)' },
-    { id: 'Collection Jeune Citoyen', name: 'Collection Jeune Citoyen (EDHC)' },
-    { id: 'Collection Succès', name: 'Collection Succès (Annales)' },
-    { id: 'Collection Polyglotte', name: 'Collection Polyglotte (Anglais)' },
-    { id: 'Collection Racines', name: 'Collection Racines (Français)' },
-    { id: 'Collection Papyrus', name: 'Collection Papyrus (Littérature)' },
-  ];
-
-  // Ordre hiérarchique strict des collections demandé par l'utilisateur
+  // Ordre hiérarchique strict des collections
   const COLLECTION_ORDER = [
     'Collection Archives',
     'Collection École et Métiers',
@@ -50,19 +54,13 @@ export default function CataloguePage() {
     return idx !== -1 ? idx : 999;
   };
 
-  const levels = [
-    { id: 'all', name: 'Tous les niveaux' },
-    { id: 'Collège', name: 'Collège (6e à 3e - BEPC)' },
-    { id: 'Lycée', name: 'Lycée (2nde à Terminale - BAC)' },
-    { id: 'Littérature', name: 'Littérature / Tout public' },
-  ];
-
   const filteredBooks = useMemo(() => {
     return books.filter((book) => {
       const matchSearch =
         book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (book.author && book.author.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        book.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (book.category && book.category.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (book.discipline && book.discipline.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (book.collection && book.collection.toLowerCase().includes(searchTerm.toLowerCase()));
 
       const matchCollection =
@@ -70,17 +68,20 @@ export default function CataloguePage() {
 
       const matchLevel =
         selectedLevel === 'all' ||
-        (selectedLevel === 'Collège' && (book.level?.includes('6') || book.level?.includes('5') || book.level?.includes('4') || book.level?.includes('3') || book.level?.includes('BEPC') || book.level?.includes('Collège'))) ||
-        (selectedLevel === 'Lycée' && (book.level?.includes('2nde') || book.level?.includes('1ère') || book.level?.includes('1ere') || book.level?.includes('Terminale') || book.level?.includes('BAC') || book.level?.includes('Lycée') || book.level?.includes('Première') || book.level?.includes('Seconde'))) ||
-        (selectedLevel === 'Littérature' && (book.category?.includes('Littérature') || book.level?.includes('public')));
+        (book.level && book.level.toLowerCase().includes(selectedLevel.toLowerCase()));
 
       return matchSearch && matchCollection && matchLevel;
     }).sort((a, b) => {
       if (sortBy === 'price-asc') return a.price - b.price;
       if (sortBy === 'price-desc') return b.price - a.price;
       if (sortBy === 'title') return a.title.localeCompare(b.title);
-      // Par défaut, tri selon l'ordre strict des collections :
-      // Archives → École et Métiers → Jeune Citoyen → Succès → Polyglotte → Racines → Papyrus
+      
+      // Par défaut : respect de l'order_index défini par l'administrateur
+      const orderA = a.order_index ?? 9999;
+      const orderB = b.order_index ?? 9999;
+      if (orderA !== orderB) return orderA - orderB;
+
+      // Fallback sur le rang de collection puis le titre
       const rankA = getCollectionRank(a.collection);
       const rankB = getCollectionRank(b.collection);
       if (rankA !== rankB) return rankA - rankB;
@@ -125,8 +126,9 @@ export default function CataloguePage() {
               onChange={(e) => setSelectedCollection(e.target.value)}
               className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-hidden focus:border-amber-600 bg-white"
             >
-              {collections.map((col) => (
-                <option key={col.id} value={col.id}>
+              <option value="all">Toutes les collections</option>
+              {collectionsList.map((col) => (
+                <option key={col.id} value={col.name}>
                   {col.name}
                 </option>
               ))}
@@ -140,9 +142,10 @@ export default function CataloguePage() {
               onChange={(e) => setSelectedLevel(e.target.value)}
               className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-hidden focus:border-amber-600 bg-white"
             >
-              {levels.map((lvl) => (
-                <option key={lvl.id} value={lvl.id}>
-                  {lvl.name}
+              <option value="all">Tous les niveaux</option>
+              {levelsList.map((lvl) => (
+                <option key={lvl.id} value={lvl.name}>
+                  {lvl.name} {lvl.cycle ? `(${lvl.cycle})` : ''}
                 </option>
               ))}
             </select>
@@ -155,7 +158,7 @@ export default function CataloguePage() {
               onChange={(e) => setSortBy(e.target.value)}
               className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-hidden focus:border-amber-600 bg-white"
             >
-              <option value="default">Tri par défaut</option>
+              <option value="default">Ordre officiel / Admin</option>
               <option value="price-asc">Prix croissant</option>
               <option value="price-desc">Prix décroissant</option>
               <option value="title">Titre alphabétique</option>
