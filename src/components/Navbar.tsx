@@ -22,8 +22,10 @@ export default function Navbar() {
 
   const navLinks = [
     { name: 'Accueil', href: '/' },
-    { name: 'Catalogue & Livres', href: '/catalogue' },
-    { name: 'Corrigés & Documents', href: '/corriges', highlight: true },
+    { name: 'Catalogue', href: '/catalogue' },
+    { name: 'Extraits Flipbook', href: '/extraits', highlight: true },
+    { name: 'Corrigés', href: '/corriges' },
+    { name: 'Espace Revendeurs', href: '/revendeurs' },
     { name: 'À Propos', href: '/a-propos' },
     { name: 'Contact', href: '/contact' },
   ];
@@ -44,6 +46,12 @@ export default function Navbar() {
             <span>Les Éditions Phénix — La Maison du Succès | Évaluations, Annales & Corrigés Officiels</span>
           </div>
           <div className="flex items-center gap-4 hidden sm:flex">
+            <Link
+              href="/revendeurs"
+              className="text-amber-300 hover:text-white transition-colors flex items-center gap-1 font-bold"
+            >
+              <span>Espace Revendeurs / Écoles</span>
+            </Link>
             <a 
               href="https://wa.me/2250718784093" 
               target="_blank" 
@@ -51,7 +59,7 @@ export default function Navbar() {
               className="hover:text-amber-200 transition-colors flex items-center gap-1 font-medium"
             >
               <Phone className="w-3 h-3 text-emerald-400" />
-              <span>Assistance WhatsApp : 07 18 78 40 93</span>
+              <span>Assistance : 07 18 78 40 93</span>
             </a>
             <Link 
               href="/admin/dashboard" 

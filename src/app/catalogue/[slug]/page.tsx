@@ -19,12 +19,14 @@ import {
 import { INITIAL_BOOKS, INITIAL_CORRIGES } from '@/lib/initial-data';
 import { useCart } from '@/lib/cart-context';
 import BookCard from '@/components/BookCard';
+import BookFlipbook from '@/components/BookFlipbook';
 
 export default function BookDetailPage() {
   const params = useParams();
   const slug = params?.slug as string;
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
+  const [showFlipbook, setShowFlipbook] = useState(false);
 
   const book = INITIAL_BOOKS.find((b) => b.slug === slug);
 
@@ -85,7 +87,7 @@ export default function BookDetailPage() {
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14">
           {/* Left: Big Book Cover */}
-          <div className="lg:col-span-5 flex flex-col items-center">
+          <div className="lg:col-span-5 flex flex-col items-center space-y-4">
             <div className="relative w-64 sm:w-80 aspect-3/4 rounded-2xl overflow-hidden shadow-2xl border-4 border-white bg-slate-100">
               <img
                 src={book.cover_url}
@@ -93,8 +95,18 @@ export default function BookDetailPage() {
                 className="w-full h-full object-cover"
               />
             </div>
+
+            {/* Bouton Feuilleter l'extrait */}
+            <button
+              onClick={() => setShowFlipbook(true)}
+              className="w-full max-w-xs py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.02]"
+            >
+              <BookOpen className="w-4 h-4" />
+              <span>Feuilleter l'extrait (Flipbook 3D)</span>
+            </button>
+
             {book.collection && (
-              <div className="mt-4 px-4 py-1.5 rounded-full bg-amber-100 text-amber-900 font-bold text-xs">
+              <div className="px-4 py-1.5 rounded-full bg-amber-100 text-amber-900 font-bold text-xs">
                 {book.collection}
               </div>
             )}
@@ -287,6 +299,14 @@ export default function BookDetailPage() {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Liseuse Flipbook si activée */}
+      {showFlipbook && (
+        <BookFlipbook
+          book={book}
+          onClose={() => setShowFlipbook(false)}
+        />
       )}
     </div>
   );

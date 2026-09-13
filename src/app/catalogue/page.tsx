@@ -41,7 +41,7 @@ export default function CataloguePage() {
     return books.filter((book) => {
       const matchSearch =
         book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (book.author && book.author.toLowerCase().includes(searchTerm.toLowerCase())) ||
         book.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (book.collection && book.collection.toLowerCase().includes(searchTerm.toLowerCase()));
 

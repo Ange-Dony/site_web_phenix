@@ -1,4 +1,4 @@
-import { Book, Corrige, SiteSettings } from '@/types';
+import { Book, Corrige, SiteSettings, CollectionItem, DisciplineItem } from '@/types';
 
 export const INITIAL_SETTINGS: SiteSettings = {
   site_name: 'Les Éditions Phénix',
@@ -538,4 +538,55 @@ export const INITIAL_CORRIGES: Corrige[] = [
     file_size: '2.8 Mo',
     download_count: 380,
   }
+];
+
+export const INITIAL_COLLECTIONS: CollectionItem[] = [
+  {
+    id: 'col-1',
+    name: 'Collection Succès',
+    description: 'Annales officielles et méthodologies intensives pour examens (BEPC & BAC)',
+    color: 'from-amber-600 to-amber-800',
+  },
+  {
+    id: 'col-2',
+    name: 'Collection Archives',
+    description: 'Cahiers d\'activités d\'évaluation et situations d\'apprentissage (Histoire-Géo)',
+    color: 'from-blue-600 to-blue-800',
+  },
+  {
+    id: 'col-3',
+    name: 'Collection Polyglotte',
+    description: 'Guides d\'apprentissage des langues vivantes et compétences orales (Anglais)',
+    color: 'from-emerald-600 to-emerald-800',
+  },
+  {
+    id: 'col-4',
+    name: 'Collection Papyrus',
+    description: 'Romans, poésie et créations littéraires ivoiriennes et africaines',
+    color: 'from-purple-600 to-purple-800',
+  },
+  {
+    id: 'col-5',
+    name: 'Collection École et Métiers',
+    description: 'Filières professionnelles tertiaires et Communication & Méthodes Commerciales (CMC)',
+    color: 'from-teal-600 to-teal-800',
+  },
+  {
+    id: 'col-6',
+    name: 'Collection Racines',
+    description: 'Patrimoine culturel, histoire générale et civisme',
+    color: 'from-rose-600 to-rose-800',
+  },
+];
+
+export const INITIAL_DISCIPLINES: DisciplineItem[] = [
+  { id: 'disc-1', name: 'Histoire-Géographie', description: 'Histoire, Géographie, Géopolitique et Éducation aux Droits de l\'Homme' },
+  { id: 'disc-2', name: 'Mathématiques', description: 'Calcul, Algèbre, Géométrie et Analyse' },
+  { id: 'disc-3', name: 'Philosophie', description: 'Dissertation philosophique et explication de texte méthodique' },
+  { id: 'disc-4', name: 'Physique-Chimie', description: 'Sciences physiques, chimie organique et mécanique' },
+  { id: 'disc-5', name: 'Anglais', description: 'Compréhension de texte, grammaire et expression orale' },
+  { id: 'disc-6', name: 'Français', description: 'Grammaire, orthographe, dictée, commentaire et contraction de texte' },
+  { id: 'disc-7', name: 'Sciences de la Vie et de la Terre (SVT)', description: 'Biologie, géologie et sciences environnementales' },
+  { id: 'disc-8', name: 'Communication & Commerce (CMC)', description: 'Filières tertiaires, correspondance commerciale et gestion' },
+  { id: 'disc-9', name: 'Littérature & Romans', description: 'Œuvres littéraires, théâtre et poésie' },
 ];

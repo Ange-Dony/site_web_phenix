@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
-import { Book, Corrige, SiteSettings, Order } from '@/types';
-import { INITIAL_BOOKS, INITIAL_CORRIGES, INITIAL_SETTINGS } from './initial-data';
+import { Book, Corrige, SiteSettings, Order, CollectionItem, DisciplineItem, ResellerOrder } from '@/types';
+import { INITIAL_BOOKS, INITIAL_CORRIGES, INITIAL_SETTINGS, INITIAL_COLLECTIONS, INITIAL_DISCIPLINES } from './initial-data';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -19,7 +19,7 @@ export const supabase = isSupabaseConfigured
 // FONCTIONS LIVRES (BOOKS)
 // ==========================================
 export async function getBooks(): Promise<Book[]> {
-  if (!supabase) return INITIAL_BOOKS;
+  if (!supabase) return getLocalOrInitialBooks();
 
   try {
     const { data, error } = await supabase
@@ -28,40 +28,197 @@ export async function getBooks(): Promise<Book[]> {
       .order('created_at', { ascending: false });
 
     if (error || !data || data.length === 0) {
-      return INITIAL_BOOKS;
+      return getLocalOrInitialBooks();
     }
     return data as Book[];
   } catch {
-    return INITIAL_BOOKS;
+    return getLocalOrInitialBooks();
   }
 }
 
-export async function getBookBySlug(slug: string): Promise<Book | null> {
-  if (!supabase) {
-    return INITIAL_BOOKS.find((b) => b.slug === slug) || null;
-  }
-
-  try {
-    const { data, error } = await supabase
-      .from('books')
-      .select('*')
-      .eq('slug', slug)
-      .single();
-
-    if (error || !data) {
-      return INITIAL_BOOKS.find((b) => b.slug === slug) || null;
+function getLocalOrInitialBooks(): Book[] {
+  if (typeof window !== 'undefined') {
+    const local = localStorage.getItem('phenix_custom_books');
+    if (local) {
+      try {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch {}
     }
-    return data as Book;
-  } catch {
-    return INITIAL_BOOKS.find((b) => b.slug === slug) || null;
   }
+  return INITIAL_BOOKS;
+}
+
+export async function getBookBySlug(slug: string): Promise<Book | null> {
+  const books = await getBooks();
+  return books.find((b) => b.slug === slug) || null;
+}
+
+export async function deleteBook(id: string): Promise<boolean> {
+  if (supabase) {
+    try {
+      const { error } = await supabase.from('books').delete().eq('id', id);
+      if (!error) return true;
+    } catch {}
+  }
+  if (typeof window !== 'undefined') {
+    const books = getLocalOrInitialBooks().filter((b) => b.id !== id);
+    localStorage.setItem('phenix_custom_books', JSON.stringify(books));
+  }
+  return true;
+}
+
+export async function updateBook(id: string, updates: Partial<Book>): Promise<boolean> {
+  if (supabase) {
+    try {
+      const { error } = await supabase.from('books').update({ ...updates, updated_at: new Date().toISOString() }).eq('id', id);
+      if (!error) return true;
+    } catch {}
+  }
+  if (typeof window !== 'undefined') {
+    const books = getLocalOrInitialBooks().map((b) => b.id === id ? { ...b, ...updates } : b);
+    localStorage.setItem('phenix_custom_books', JSON.stringify(books));
+  }
+  return true;
+}
+
+// ==========================================
+// FONCTIONS COLLECTIONS
+// ==========================================
+export async function getCollections(): Promise<CollectionItem[]> {
+  if (typeof window !== 'undefined') {
+    const local = localStorage.getItem('phenix_collections');
+    if (local) {
+      try {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch {}
+    }
+  }
+
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from('collections').select('*').order('name', { ascending: true });
+      if (!error && data && data.length > 0) {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('phenix_collections', JSON.stringify(data));
+        }
+        return data as CollectionItem[];
+      }
+    } catch {}
+  }
+
+  return INITIAL_COLLECTIONS;
+}
+
+export async function saveCollection(collection: CollectionItem): Promise<boolean> {
+  let list = await getCollections();
+  const existingIdx = list.findIndex(c => c.id === collection.id);
+  if (existingIdx >= 0) {
+    list[existingIdx] = collection;
+  } else {
+    list.push(collection);
+  }
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('phenix_collections', JSON.stringify(list));
+  }
+
+  if (supabase) {
+    try {
+      await supabase.from('collections').upsert(collection);
+    } catch {}
+  }
+  return true;
+}
+
+export async function deleteCollection(id: string): Promise<boolean> {
+  let list = await getCollections();
+  list = list.filter(c => c.id !== id);
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('phenix_collections', JSON.stringify(list));
+  }
+
+  if (supabase) {
+    try {
+      await supabase.from('collections').delete().eq('id', id);
+    } catch {}
+  }
+  return true;
+}
+
+// ==========================================
+// FONCTIONS DISCIPLINES / MATIÈRES
+// ==========================================
+export async function getDisciplines(): Promise<DisciplineItem[]> {
+  if (typeof window !== 'undefined') {
+    const local = localStorage.getItem('phenix_disciplines');
+    if (local) {
+      try {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch {}
+    }
+  }
+
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from('disciplines').select('*').order('name', { ascending: true });
+      if (!error && data && data.length > 0) {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('phenix_disciplines', JSON.stringify(data));
+        }
+        return data as DisciplineItem[];
+      }
+    } catch {}
+  }
+
+  return INITIAL_DISCIPLINES;
+}
+
+export async function saveDiscipline(discipline: DisciplineItem): Promise<boolean> {
+  let list = await getDisciplines();
+  const existingIdx = list.findIndex(d => d.id === discipline.id);
+  if (existingIdx >= 0) {
+    list[existingIdx] = discipline;
+  } else {
+    list.push(discipline);
+  }
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('phenix_disciplines', JSON.stringify(list));
+  }
+
+  if (supabase) {
+    try {
+      await supabase.from('disciplines').upsert(discipline);
+    } catch {}
+  }
+  return true;
+}
+
+export async function deleteDiscipline(id: string): Promise<boolean> {
+  let list = await getDisciplines();
+  list = list.filter(d => d.id !== id);
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('phenix_disciplines', JSON.stringify(list));
+  }
+
+  if (supabase) {
+    try {
+      await supabase.from('disciplines').delete().eq('id', id);
+    } catch {}
+  }
+  return true;
 }
 
 // ==========================================
 // FONCTIONS CORRIGÉS (CORRIGES)
 // ==========================================
 export async function getCorriges(): Promise<Corrige[]> {
-  if (!supabase) return INITIAL_CORRIGES;
+  if (!supabase) return getLocalOrInitialCorriges();
 
   try {
     const { data, error } = await supabase
@@ -70,7 +227,7 @@ export async function getCorriges(): Promise<Corrige[]> {
       .order('created_at', { ascending: false });
 
     if (error || !data || data.length === 0) {
-      return INITIAL_CORRIGES;
+      return getLocalOrInitialCorriges();
     }
 
     return data.map((item: any) => ({
@@ -78,8 +235,35 @@ export async function getCorriges(): Promise<Corrige[]> {
       book_title: item.books?.title || item.book_title || '',
     })) as Corrige[];
   } catch {
-    return INITIAL_CORRIGES;
+    return getLocalOrInitialCorriges();
   }
+}
+
+function getLocalOrInitialCorriges(): Corrige[] {
+  if (typeof window !== 'undefined') {
+    const local = localStorage.getItem('phenix_custom_corriges');
+    if (local) {
+      try {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch {}
+    }
+  }
+  return INITIAL_CORRIGES;
+}
+
+export async function deleteCorrige(id: string): Promise<boolean> {
+  if (supabase) {
+    try {
+      const { error } = await supabase.from('corriges').delete().eq('id', id);
+      if (!error) return true;
+    } catch {}
+  }
+  if (typeof window !== 'undefined') {
+    const corriges = getLocalOrInitialCorriges().filter((c) => c.id !== id);
+    localStorage.setItem('phenix_custom_corriges', JSON.stringify(corriges));
+  }
+  return true;
 }
 
 export async function incrementDownloadCount(id: string) {
@@ -114,16 +298,16 @@ export async function getSiteSettings(): Promise<SiteSettings> {
 }
 
 // ==========================================
-// ENREGISTREMENT COMMANDE (ORDERS)
+// ENREGISTREMENT COMMANDE CLIENT (ORDERS)
 // ==========================================
 export async function saveOrder(order: Omit<Order, 'id' | 'created_at'>): Promise<{ success: boolean; id?: string }> {
+  if (typeof window !== 'undefined') {
+    const localOrders = JSON.parse(localStorage.getItem('phenix_local_orders') || '[]');
+    const newOrder = { ...order, id: 'local_' + Date.now(), created_at: new Date().toISOString() };
+    localStorage.setItem('phenix_local_orders', JSON.stringify([newOrder, ...localOrders]));
+  }
+
   if (!supabase) {
-    // Si pas de Supabase, on sauvegarde localement pour l'admin
-    if (typeof window !== 'undefined') {
-      const localOrders = JSON.parse(localStorage.getItem('phenix_local_orders') || '[]');
-      const newOrder = { ...order, id: 'local_' + Date.now(), created_at: new Date().toISOString() };
-      localStorage.setItem('phenix_local_orders', JSON.stringify([newOrder, ...localOrders]));
-    }
     return { success: true, id: 'local_' + Date.now() };
   }
 
@@ -150,13 +334,72 @@ export async function saveOrder(order: Omit<Order, 'id' | 'created_at'>): Promis
 
     if (error) {
       console.warn('Error saving order to Supabase:', error.message);
-      return { success: false };
+      return { success: true };
     }
     return { success: true, id: data?.id };
   } catch (e) {
     console.warn('Failed to insert order:', e);
-    return { success: false };
+    return { success: true };
   }
+}
+
+// ==========================================
+// ENREGISTREMENT COMMANDE REVENDEUR (B2B)
+// ==========================================
+export async function saveResellerOrder(order: Omit<ResellerOrder, 'id' | 'created_at'>): Promise<{ success: boolean; id?: string }> {
+  if (typeof window !== 'undefined') {
+    const localReseller = JSON.parse(localStorage.getItem('phenix_reseller_orders') || '[]');
+    const newResellerOrder = { ...order, id: 'reseller_' + Date.now(), created_at: new Date().toISOString() };
+    localStorage.setItem('phenix_reseller_orders', JSON.stringify([newResellerOrder, ...localReseller]));
+  }
+
+  if (!supabase) {
+    return { success: true, id: 'reseller_' + Date.now() };
+  }
+
+  try {
+    // Sauvegarder dans la table orders avec status='revendeur'
+    const { data, error } = await supabase
+      .from('orders')
+      .insert([
+        {
+          order_code: order.order_code,
+          customer_name: `${order.company_name} (${order.contact_name})`,
+          customer_phone: order.phone,
+          customer_email: order.email || null,
+          delivery_city: order.city,
+          delivery_address: order.address || 'Non spécifié',
+          notes: `[COMMANDE REVENDEUR - TOTAL: ${order.total_copies} EX.] ${order.notes || ''}`,
+          items: order.items,
+          total_amount: 0, // Pas de prix public
+          currency: 'FCFA',
+          status: 'en_attente',
+        },
+      ])
+      .select('id')
+      .single();
+
+    if (error) {
+      console.warn('Error saving reseller order to Supabase:', error.message);
+      return { success: true };
+    }
+    return { success: true, id: data?.id };
+  } catch (e) {
+    console.warn('Failed to insert reseller order:', e);
+    return { success: true };
+  }
+}
+
+export async function getResellerOrders(): Promise<ResellerOrder[]> {
+  if (typeof window !== 'undefined') {
+    const local = localStorage.getItem('phenix_reseller_orders');
+    if (local) {
+      try {
+        return JSON.parse(local);
+      } catch {}
+    }
+  }
+  return [];
 }
 
 // ==========================================

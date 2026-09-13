@@ -85,18 +85,28 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/corriges" className="flex items-center gap-1.5 text-amber-300 font-semibold hover:text-amber-200">
+                <Link href="/extraits" className="flex items-center gap-1.5 text-amber-300 font-semibold hover:text-amber-200">
+                  <BookOpen className="w-3.5 h-3.5" /> Extraits & Flipbook 3D
+                </Link>
+              </li>
+              <li>
+                <Link href="/corriges" className="flex items-center gap-1.5 text-emerald-300 font-semibold hover:text-emerald-200">
                   <Download className="w-3.5 h-3.5" /> Corrigés Gratuits (PDF / Word)
                 </Link>
               </li>
               <li>
+                <Link href="/revendeurs" className="hover:text-white transition-colors text-amber-200 font-medium">
+                  Espace Revendeurs & Écoles
+                </Link>
+              </li>
+              <li>
                 <Link href="/catalogue" className="hover:text-white transition-colors">
-                  Catalogue Complet des Livres
+                  Catalogue des Ouvrages
                 </Link>
               </li>
               <li>
                 <Link href="/commande" className="hover:text-white transition-colors">
-                  Passer une Commande Groupée
+                  Passer une Commande
                 </Link>
               </li>
               <li>

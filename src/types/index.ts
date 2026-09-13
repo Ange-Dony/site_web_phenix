@@ -2,9 +2,10 @@ export interface Book {
   id: string;
   title: string;
   slug: string;
-  author: string;
+  author?: string; // Facultatif selon la demande
   category: string;
   collection?: string;
+  discipline?: string; // Matière / Discipline
   level?: string;
   description: string;
   price: number;
@@ -15,6 +16,7 @@ export interface Book {
   published_year?: number;
   is_featured?: boolean;
   in_stock?: boolean;
+  extract_pages?: string[]; // Liste des URLs d'images pour le feuilletage Flipbook
   created_at?: string;
 }
 
@@ -31,6 +33,21 @@ export interface Corrige {
   file_type: 'pdf' | 'docx' | 'doc';
   file_size?: string;
   download_count?: number;
+  created_at?: string;
+}
+
+export interface CollectionItem {
+  id: string;
+  name: string;
+  description?: string;
+  color?: string;
+  created_at?: string;
+}
+
+export interface DisciplineItem {
+  id: string;
+  name: string;
+  description?: string;
   created_at?: string;
 }
 
@@ -64,5 +81,30 @@ export interface Order {
   total_amount: number;
   currency: string;
   status: 'en_attente' | 'confirmee' | 'livree' | 'annulee';
+  created_at?: string;
+}
+
+export interface ResellerOrderItem {
+  book_id: string;
+  title: string;
+  collection?: string;
+  discipline?: string;
+  level?: string;
+  quantity: number;
+}
+
+export interface ResellerOrder {
+  id?: string;
+  order_code: string;
+  company_name: string;
+  contact_name: string;
+  phone: string;
+  email?: string;
+  city: string;
+  address?: string;
+  notes?: string;
+  items: ResellerOrderItem[];
+  total_copies: number;
+  status: 'en_attente' | 'confirmee' | 'traitee' | 'annulee';
   created_at?: string;
 }
